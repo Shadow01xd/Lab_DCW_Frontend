@@ -165,20 +165,20 @@ onMounted(fetchServices)
 
 <template>
   <div class="space-y-6">
-    <!-- Lista -->
+    <!-- Tabla -->
     <div class="bg-gray-900 rounded-lg shadow-lg p-6 text-white">
-      <h3 class="text-2xl font-bold mb-4">Servicios Existentes</h3>
+      <h2 class="text-2xl font-bold mb-4">Servicios Existentes</h2>
 
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-700">
           <thead class="bg-violet-700">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Imagen</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nombre</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Descripción</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Costo</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Categoría</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Acciones</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Imagen</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Nombre</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Descripción</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Costo</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Categoría</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody class="bg-gray-800 divide-y divide-gray-700">
@@ -186,10 +186,10 @@ onMounted(fetchServices)
               <td class="px-6 py-4"><img :src="getImg(s.imagen)" class="h-12 w-12 object-cover rounded" /></td>
               <td class="px-6 py-4">{{ s.nombre }}</td>
               <td class="px-6 py-4">{{ s.descripcion }}</td>
-              <td class="px-6 py-4 text-green-400">${{ s.costo }}</td>
-              <td class="px-6 py-4 capitalize">{{ categorias.find(c => c.value === s.categoria)?.label || 'N/A' }}</td>
+              <td class="px-6 py-4 text-green-400 font-semibold">${{ s.costo }}</td>
+              <td class="px-6 py-4 capitalize">{{ categorias.find(c => c.value === s.categoria)?.label }}</td>
               <td class="px-6 py-4">
-                <button @click="modoEdicion = s._id" class="text-violet-300 hover:text-white mr-3">Editar</button>
+                <button @click="editarServicio(s)" class="text-violet-300 hover:text-white mr-3">Editar</button>
                 <button @click="deleteService(s._id)" class="text-red-400 hover:text-red-200">Eliminar</button>
               </td>
             </tr>
@@ -199,84 +199,69 @@ onMounted(fetchServices)
     </div>
 
     <!-- Paginación -->
-    <div v-if="totalPaginas > 1" class="mt-4 flex justify-center gap-2">
+    <div v-if="totalPaginas > 1" class="flex justify-center gap-2 text-white">
       <button @click="paginaActual--" :disabled="paginaActual === 1"
-              class="px-3 py-1 rounded bg-violet-600 text-white disabled:opacity-40">Anterior</button>
-      <span class="text-white">{{ paginaActual }} / {{ totalPaginas }}</span>
+        class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1 rounded disabled:opacity-40">Anterior</button>
+      <span>{{ paginaActual }} / {{ totalPaginas }}</span>
       <button @click="paginaActual++" :disabled="paginaActual === totalPaginas"
-              class="px-3 py-1 rounded bg-violet-600 text-white disabled:opacity-40">Siguiente</button>
+        class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1 rounded disabled:opacity-40">Siguiente</button>
     </div>
 
-    <!-- Botón para agregar -->
-    <div v-if="!mostrarFormulario" class="flex justify-center mt-10">
-      <button @click="mostrarFormulario = true"
+    <!-- Botón Crear -->
+    <div class="flex justify-center">
+      <button @click="abrirModal()"
         class="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-3 rounded-xl shadow">
         Crear Servicio
       </button>
     </div>
 
-    <!-- Formulario -->
-    <div v-if="mostrarFormulario" class="bg-gray-900 text-white p-6 rounded-lg shadow-xl max-w-2xl mx-auto animate-fade-in">
-      <h3 class="text-2xl font-semibold mb-4">
-        Crear nuevo Servicio
-      </h3>
+    <!-- Modal Crear/Editar -->
+    <div v-if="modalVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div class="bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-xl animate-fade-in text-white relative">
+        <h3 class="text-2xl font-semibold mb-4">{{ modoEdicion ? 'Editar Servicio' : 'Agregar Servicio' }}</h3>
 
-      <form @submit.prevent="createService" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium">Nombre</label>
-          <input v-model="nuevoServicio.nombre" type="text" required
-            class="mt-1 block w-full rounded-md bg-gray-800 text-white border border-gray-600 focus:ring-violet-500 focus:border-violet-500">
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium">Descripción</label>
-          <textarea v-model="nuevoServicio.descripcion" rows="3" required
-            class="mt-1 block w-full rounded-md bg-gray-800 text-white border border-gray-600 focus:ring-violet-500 focus:border-violet-500"></textarea>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium">Costo</label>
-          <input v-model="nuevoServicio.costo" type="number" required min="0" step="0.01"
-            class="mt-1 block w-full rounded-md bg-gray-800 text-white border border-gray-600 focus:ring-violet-500 focus:border-violet-500">
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium">Categoría</label>
-          <select v-model="nuevoServicio.categoria" required
-            class="mt-1 block w-full rounded-md bg-gray-800 text-white border border-gray-600 focus:ring-violet-500 focus:border-violet-500">
-            <option v-for="cat in categorias" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+        <form @submit.prevent="modoEdicion ? updateService() : createService()" class="space-y-4">
+          <input v-model="form.nombre" placeholder="Nombre"
+            class="input-dark" />
+          <textarea v-model="form.descripcion" placeholder="Descripción"
+            class="input-dark" />
+          <input v-model="form.costo" type="number" placeholder="Costo"
+            class="input-dark" />
+          <select v-model="form.categoria" class="input-dark">
+            <option disabled value="">— Selecciona —</option>
+            <option v-for="c in categorias" :key="c.value" :value="c.value">{{ c.label }}</option>
           </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium">Imagen</label>
           <input type="file" @change="handleImagen" accept="image/*"
-            class="mt-1 block w-full text-white file:bg-violet-700 file:text-white file:rounded-md file:px-4 file:py-1" />
-        </div>
+            class="text-white file:bg-violet-700 file:text-white file:px-4 file:py-1 file:rounded-md" />
 
-        <div class="flex justify-end gap-4">
-          <button type="submit" class="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-2 rounded">
-            Agregar
-          </button>
-          <button type="button" @click="mostrarFormulario = false"
-            class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded">
-            Cancelar
-          </button>
-        </div>
-      </form>
+          <div class="flex justify-end gap-4 pt-2">
+            <button type="submit" class="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-2 rounded">
+              {{ modoEdicion ? 'Actualizar' : 'Agregar' }}
+            </button>
+            <button type="button" @click="cerrarModal"
+              class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.input-dark {
+  @apply w-full rounded-md bg-gray-800 text-white border border-gray-600 p-2 focus:ring-violet-500 focus:border-violet-500;
+}
 @keyframes fade-in {
-  0% { opacity: 0; transform: translateY(16px); }
+  0% { opacity: 0; transform: translateY(10px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in {
-  animation: fade-in 0.5s ease-out;
+  animation: fade-in 0.4s ease-out;
 }
 </style>
+
 
 
 
