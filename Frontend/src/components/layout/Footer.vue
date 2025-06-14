@@ -3,23 +3,18 @@ import { ref } from 'vue'
 import facebookIcon from '@/assets/icon/facebook.png'
 import twitterIcon from '@/assets/icon/twitter.png'
 import instagramIcon from '@/assets/icon/instagram.png'
-import linkedinIcon from '@/assets/icon/linkedin.png' // Asegúrate que el archivo esté bien escrito
 
-// Redes sociales
 const redesSociales = [
   { nombre: 'Facebook', icono: facebookIcon, url: 'https://facebook.com' },
   { nombre: 'Twitter', icono: twitterIcon, url: 'https://twitter.com' },
-  { nombre: 'Instagram', icono: instagramIcon, url: 'https://instagram.com' },
-  { nombre: 'LinkedIn', icono: linkedinIcon, url: 'https://linkedin.com' }
+  { nombre: 'Instagram', icono: instagramIcon, url: 'https://instagram.com' }
 ]
 
-// Newsletter
 const emailNewsletter = ref('')
 const estaSuscrito = ref(false)
 const textoBoton = ref('Suscribete')
 const errorEmail = ref('')
 
-// Validación de email con regex
 const esEmailValido = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
 const manejarSuscripcion = () => {
