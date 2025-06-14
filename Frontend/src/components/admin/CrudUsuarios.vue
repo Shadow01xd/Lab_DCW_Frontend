@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted, watch, defineProps, computed } from 'vue'
 import { obtenerToken } from '@/utils/auth'
-import { API_URL } from '../../config/api'
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://laboratoriodcw-production.up.railway.app'
 
 const props = defineProps({ refetch: { type: Number, default: 0 } })
 
@@ -25,24 +26,24 @@ const fetchUsers = async () => {
   error.value = ''
   try {
     const token = obtenerToken()
-    if (!token) {
-      error.value = 'No estás autenticado para ver los usuarios.'
-      return
-    }
+    if (!token) throw new Error('No estás autenticado para ver los usuarios.')
+
     const response = await fetch(`${API_URL}/api/admin/usuarios`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     })
+
     if (!response.ok) throw new Error('Error al obtener usuarios')
     const data = await response.json()
     usuarios.value = data
+
+    // Reajustar la página si es necesario
     if (paginaActual.value > totalPaginas.value) {
       paginaActual.value = totalPaginas.value || 1
     }
-  } catch (error) {
-    console.error('Error:', error)
-    error.value = error.message || 'Error al cargar usuarios'
+
+  } catch (err) {
+    console.error(err)
+    error.value = err.message || 'Error desconocido al cargar usuarios'
   } finally {
     cargando.value = false
   }
@@ -52,34 +53,30 @@ const deleteUser = async (id) => {
   if (!confirm('¿Eliminar este usuario?')) return
   try {
     const token = obtenerToken()
-    if (!token) {
-      error.value = 'No estás autenticado para eliminar usuarios.'
-      return
-    }
+    if (!token) throw new Error('No estás autenticado para eliminar usuarios.')
+
     const response = await fetch(`${API_URL}/api/admin/usuarios/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     })
+
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || 'Error al eliminar usuario')
+      const resErr = await response.json()
+      throw new Error(resErr.message || 'Error al eliminar usuario')
     }
+
     await fetchUsers()
-  } catch (error) {
-    console.error('Error al eliminar usuario:', error)
-    error.value = error.message || 'Error al eliminar usuario'
+  } catch (err) {
+    console.error(err)
+    error.value = err.message || 'Error desconocido al eliminar usuario'
   }
 }
 
 const updateUser = async (usuario) => {
   try {
     const token = obtenerToken()
-    if (!token) {
-      error.value = 'No estás autenticado para actualizar usuarios.'
-      return
-    }
+    if (!token) throw new Error('No estás autenticado para actualizar usuarios.')
+
     const response = await fetch(`${API_URL}/api/admin/usuarios/${usuario._id}`, {
       method: 'PUT',
       headers: {
@@ -90,21 +87,22 @@ const updateUser = async (usuario) => {
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || 'Error al actualizar usuario')
+      const resErr = await response.json()
+      throw new Error(resErr.message || 'Error al actualizar usuario')
     }
 
     await fetchUsers()
     modoEdicion.value = null
-  } catch (error) {
-    console.error('Error al actualizar usuario:', error)
-    error.value = error.message || 'Error al actualizar usuario'
+  } catch (err) {
+    console.error(err)
+    error.value = err.message || 'Error desconocido al actualizar usuario'
   }
 }
 
 onMounted(fetchUsers)
 watch(() => props.refetch, fetchUsers)
 </script>
+
 
 <template>
   <p v-if="error" class="text-red-600 font-semibold mb-4 text-center">{{ error }}</p>

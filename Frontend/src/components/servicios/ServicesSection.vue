@@ -8,14 +8,14 @@ import icon5 from '@/assets/icon/marketing_digital.png'
 import icon6 from '@/assets/icon/e-commerce.png'
 import ServiceCardAuthenticated from './ServiceCardAuthenticated.vue'
 import ServiceDetailModal from './ServiceDetailModal.vue'
-import { API_URL } from '../../config/api'
 
-// Función para obtener el token de autenticación
+const API_URL = import.meta.env.VITE_API_URL
+
 function obtenerToken() {
   return localStorage.getItem('token')
 }
 
-const filtro = ref('') 
+const filtro = ref('')
 const serviciosDB = ref([])
 const cargando = ref(false)
 const error = ref('')
@@ -68,20 +68,19 @@ const addToCart = async (serviceData) => {
       return
     }
 
-    // Extraer los datos necesarios del objeto serviceData
     const { _id: servicioId, tecnologiasSeleccionadas, precioTotal } = serviceData
 
-    const response = await fetch(`${API_URL}/api/carrito`, {
+    const response = await fetch(`${API_URL}/carrito`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        servicioId: servicioId,
-        cantidad: 1, // Asumiendo que la cantidad es 1
-        tecnologiasSeleccionadas: tecnologiasSeleccionadas,
-        precioTotal: precioTotal
+        servicioId,
+        cantidad: 1,
+        tecnologiasSeleccionadas,
+        precioTotal
       })
     })
 
@@ -92,21 +91,20 @@ const addToCart = async (serviceData) => {
 
     const data = await response.json()
     successMessage.value = data.message || 'Servicio agregado al carrito con éxito!'
-    // Importar y usar el cartStore para actualizar el carrito
+    
     const cartStore = await import('@/utils/cartStore')
-    cartStore.fetchCartData() // Recargar los datos del carrito
-    closeModal() // Cerrar el modal después de agregar al carrito
+    cartStore.fetchCartData()
+    closeModal()
 
     setTimeout(() => {
       successMessage.value = ''
-    }, 3000) // Ocultar mensaje después de 3 segundos
-
+    }, 3000)
   } catch (error) {
     errorMessage.value = error.message
     console.error('Error al agregar al carrito:', error)
     setTimeout(() => {
       errorMessage.value = ''
-    }, 5000) // Ocultar mensaje de error después de 5 segundos
+    }, 5000)
   }
 }
 
@@ -117,7 +115,7 @@ const fetchServices = async () => {
       error.value = 'No estás autenticado para ver los servicios de la base de datos.'
       return
     }
-    const response = await fetch(`${API_URL}/api/servicios`, {
+    const response = await fetch(`${API_URL}/servicios`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -140,6 +138,7 @@ onMounted(() => {
   }
 })
 </script>
+
 
 <template>
   <section id="servicios" class="py-24 bg-white">

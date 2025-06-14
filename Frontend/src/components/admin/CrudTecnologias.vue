@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { obtenerToken } from '@/utils/auth'
-import { API_URL } from '../../config/api'
-import { getImageUrl } from '../../utils/imageUtils'
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://laboratoriodcw-production.up.railway.app'
 
 const tecnologias = ref([])
 const mostrarFormulario = ref(false)
@@ -42,7 +42,7 @@ const fetchTechnologies = async () => {
       paginaActual.value = totalPaginas.value || 1
     }
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error.message || error)
   }
 }
 
@@ -80,7 +80,7 @@ const guardarTecnologia = async () => {
     await fetchTechnologies()
     cerrarFormulario()
   } catch (error) {
-    console.error('Error al guardar tecnología:', error)
+    console.error('Error al guardar tecnología:', error.message || error)
   }
 }
 
@@ -107,7 +107,7 @@ const eliminarTecnologia = async (id) => {
     if (!response.ok) throw new Error('Error al eliminar tecnología')
     await fetchTechnologies()
   } catch (error) {
-    console.error('Error al eliminar tecnología:', error)
+    console.error('Error al eliminar tecnología:', error.message || error)
   }
 }
 
@@ -125,6 +125,7 @@ const cerrarFormulario = () => {
 
 onMounted(fetchTechnologies)
 </script>
+
 
 <template>
   <div class="space-y-6">
@@ -146,7 +147,7 @@ onMounted(fetchTechnologies)
           </thead>
           <tbody class="bg-gray-800 divide-y divide-gray-700">
             <tr v-for="tech in tecnologiasPaginadas" :key="tech._id" class="hover:bg-violet-800 transition">
-              <td class="px-6 py-4"><img :src="getImageUrl(tech.image)" class="h-12 w-12 object-cover rounded" /></td>
+              <td class="px-6 py-4"><img :src="`http://localhost:5000${tech.image}`" class="h-12 w-12 object-cover rounded" /></td>
               <td class="px-6 py-4">{{ tech.name }}</td>
               <td class="px-6 py-4">{{ tech.description }}</td>
               <td class="px-6 py-4">${{ tech.price }}</td>

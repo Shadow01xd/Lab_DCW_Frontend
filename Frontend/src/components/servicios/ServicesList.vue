@@ -1,3 +1,39 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+
+const API_URL = import.meta.env.VITE_API_URL
+
+const services = ref([])
+const loading = ref(true)
+const error = ref(null)
+
+const fetchServices = async () => {
+  try {
+    const response = await fetch(`${API_URL}/servicios`)
+    if (!response.ok) {
+      throw new Error('Error en la respuesta del servidor')
+    }
+    const data = await response.json()
+    services.value = data
+  } catch (err) {
+    error.value = 'Error al cargar los servicios. Por favor, intente nuevamente.'
+    console.error('Error fetching services:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const getImageUrl = (imgPath) => {
+  return imgPath.startsWith('http') ? imgPath : `${API_URL}${imgPath}`
+}
+
+onMounted(() => {
+  fetchServices()
+})
+</script>
+
+
+
 <template>
   <div class="services-container">
     <h2>Nuestros Servicios</h2>
@@ -21,45 +57,6 @@
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue'
-import { API_URL } from '../../config/api'
-
-export default {
-  name: 'ServicesList',
-  setup() {
-    const services = ref([])
-    const loading = ref(true)
-    const error = ref(null)
-
-    const fetchServices = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/servicios`)
-        if (!response.ok) {
-          throw new Error('Error en la respuesta del servidor')
-        }
-        const data = await response.json()
-        services.value = data
-        loading.value = false
-      } catch (err) {
-        error.value = 'Error al cargar los servicios. Por favor, intente nuevamente.'
-        loading.value = false
-        console.error('Error fetching services:', err)
-      }
-    }
-
-    onMounted(() => {
-      fetchServices()
-    })
-
-    return {
-      services,
-      loading,
-      error
-    }
-  }
-}
-</script>
 
 <style scoped>
 .services-container {

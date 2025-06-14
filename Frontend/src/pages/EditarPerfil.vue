@@ -4,8 +4,8 @@ import { obtenerUsuario } from '@/utils/auth'
 import { useRouter } from 'vue-router'
 import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
-import { API_URL } from '../config/api'
 
+const API_URL = import.meta.env.VITE_API_URL
 const router = useRouter()
 const usuario = ref({
   nombre: '',
@@ -35,9 +35,9 @@ const guardarCambios = async () => {
     error.value = ''
     mensaje.value = ''
 
-    // Validar que las contraseñas coincidan si se están cambiando
     if (usuario.value.password && usuario.value.password !== usuario.value.confirmPassword) {
       error.value = 'Las contraseñas no coinciden'
+      cargando.value = false
       return
     }
 
@@ -46,7 +46,7 @@ const guardarCambios = async () => {
       throw new Error('No hay sesión activa')
     }
 
-    const response = await fetch(`${API_URL}/api/usuarios/update-profile`, {
+    const response = await fetch(`${API_URL}/usuarios/update-profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -66,7 +66,6 @@ const guardarCambios = async () => {
 
     const data = await response.json()
 
-    // Actualizar el usuario en localStorage
     const usuarioActualizado = { ...data }
     delete usuarioActualizado.password
     delete usuarioActualizado.confirmPassword
@@ -84,6 +83,7 @@ const guardarCambios = async () => {
   }
 }
 </script>
+
 
 <template>
   <Header />

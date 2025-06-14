@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { obtenerToken } from '@/utils/auth'
-import { API_URL } from '../../config/api'
-import { getImageUrl } from '../../utils/imageUtils'
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://laboratoriodcw-production.up.railway.app'
 
 const props = defineProps({
   refetch: { type: Number, default: 0 }
@@ -33,7 +33,6 @@ const categorias = [
 // Paginación
 const paginaActual = ref(1)
 const porPagina = 5
-
 const serviciosPaginados = computed(() => {
   const inicio = (paginaActual.value - 1) * porPagina
   return servicios.value.slice(inicio, inicio + porPagina)
@@ -42,6 +41,7 @@ const totalPaginas = computed(() => Math.ceil(servicios.value.length / porPagina
 
 const fetchServices = async () => {
   try {
+    cargando.value = true
     const token = obtenerToken()
     const response = await fetch(`${API_URL}/api/servicios`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -53,8 +53,8 @@ const fetchServices = async () => {
       paginaActual.value = totalPaginas.value || 1
     }
     error.value = ''
-  } catch (error) {
-    console.error('Error:', error)
+  } catch (err) {
+    console.error('Error:', err)
     error.value = 'Error al cargar servicios'
   } finally {
     cargando.value = false
@@ -65,12 +65,8 @@ watch(() => props.refetch, fetchServices)
 
 const createService = async () => {
   try {
-    if (!nuevoServicio.value.nombre || !nuevoServicio.value.descripcion || !nuevoServicio.value.costo) {
-      error.value = 'Por favor completa todos los campos requeridos'
-      return
-    }
-    if (!nuevoServicio.value.imagen) {
-      error.value = 'Por favor selecciona una imagen'
+    if (!nuevoServicio.value.nombre || !nuevoServicio.value.descripcion || !nuevoServicio.value.costo || !nuevoServicio.value.imagen) {
+      error.value = 'Todos los campos son obligatorios'
       return
     }
 
@@ -93,9 +89,9 @@ const createService = async () => {
     await fetchServices()
     resetForm()
     mostrarFormulario.value = false
-  } catch (error) {
-    console.error('Error al crear servicio:', error)
-    error.value = error.message || 'Error al crear servicio'
+  } catch (err) {
+    console.error('Error al crear servicio:', err)
+    error.value = err.message || 'Error al crear servicio'
   }
 }
 
@@ -127,27 +123,24 @@ const updateService = async (servicio) => {
     await fetchServices()
     modoEdicion.value = null
     error.value = ''
-  } catch (error) {
-    console.error('Error al actualizar servicio:', error)
-    error.value = error.message || 'Error al actualizar servicio'
+  } catch (err) {
+    console.error('Error al actualizar servicio:', err)
+    error.value = err.message || 'Error al actualizar servicio'
   }
 }
 
 const deleteService = async (id) => {
   if (!confirm('¿Eliminar este servicio?')) return
-
   try {
     const token = obtenerToken()
     const response = await fetch(`${API_URL}/api/servicios/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     })
-
     if (!response.ok) throw new Error('Error al eliminar servicio')
-
     await fetchServices()
-  } catch (error) {
-    console.error('Error:', error)
+  } catch (err) {
+    console.error('Error:', err)
     error.value = 'Error al eliminar servicio'
   }
 }
@@ -173,6 +166,7 @@ const resetForm = () => {
 
 onMounted(fetchServices)
 </script>
+
 
 <template>
   <div class="space-y-6">
@@ -215,7 +209,7 @@ onMounted(fetchServices)
 
             <!-- Modo normal -->
             <template v-else>
-              <td class="p-2"><img :src="getImageUrl(servicio.imagen)" class="w-16 h-16 object-cover rounded" /></td>
+              <td class="p-2"><img :src="'http://localhost:5000' + servicio.imagen" class="w-16 h-16 object-cover rounded" /></td>
               <td class="p-2">{{ servicio.nombre }}</td>
               <td class="p-2">{{ servicio.descripcion }}</td>
               <td class="p-2">${{ servicio.costo }}</td>

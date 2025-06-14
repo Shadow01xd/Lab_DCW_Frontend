@@ -5,7 +5,8 @@ import CrudServicios from '@/components/admin/CrudServicios.vue'
 import CrudTecnologias from '@/components/admin/CrudTecnologias.vue'
 import { obtenerToken, cerrarSesion } from '@/utils/auth'
 import { register } from '@/utils/api'
-import { API_URL } from '../config/api'
+
+const API_URL = import.meta.env.VITE_API_URL
 
 /* --------- estado --------- */
 const seccion = ref('usuarios')
@@ -28,7 +29,7 @@ const displayName = computed(() =>
 onMounted(async () => {
   try {
     const token = obtenerToken()
-    const response = await fetch(`${API_URL}/api/auth/me`, {
+    const response = await fetch(`${API_URL}/auth/me`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -40,7 +41,9 @@ onMounted(async () => {
 
     const data = await response.json()
     usuarioActual.value = data.user
-  } catch { usuarioActual.value.nombre = 'Usuario' }
+  } catch {
+    usuarioActual.value.nombre = 'Usuario'
+  }
 })
 
 function logout() {
@@ -48,24 +51,29 @@ function logout() {
   window.location.href = '/'
 }
 
-function switchTab(tab) { 
+function switchTab(tab) {
   seccion.value = tab
-  mostrarCrear.value = false 
+  mostrarCrear.value = false
 }
-function resetForm() { nuevoUsuario.value = { nombre: '', email: '', password: '', rol: 'cliente' } }
 
-/* --------- registrar usuario (sin token) --------- */
+function resetForm() {
+  nuevoUsuario.value = { nombre: '', email: '', password: '', rol: 'cliente' }
+}
+
+/* --------- registrar usuario (con token de admin) --------- */
 async function crearUsuarioEnBackend() {
   const { nombre, email, password, rol } = nuevoUsuario.value
-  if (!nombre || !email || !password) { alert('Completa todos los campos'); return }
+  if (!nombre || !email || !password) {
+    alert('Completa todos los campos')
+    return
+  }
 
   try {
     const token = obtenerToken()
-    /* 1. REGISTRO BÁSICO */
-    const res = await register(nombre.trim(), email.trim(), password, rol, token)  // Enviamos el rol y token
+
+    const res = await register(nombre.trim(), email.trim(), password, rol, token)
     if (res.error || res.message) throw new Error(res.message || 'Error')
 
-    /* 2. REFRESH */
     refetchUsuarios.value++
     mostrarCrear.value = false
     resetForm()
@@ -75,6 +83,7 @@ async function crearUsuarioEnBackend() {
   }
 }
 </script>
+
 
 <template>
   <div class="min-h-screen w-full bg-gradient-to-br from-violet-900 via-gray-900 to-violet-950">

@@ -4,9 +4,8 @@ import { useRouter } from 'vue-router'
 import Header from '../../components/layout/Header.vue'
 import Footer from '../../components/layout/Footer.vue'
 import { cartState, fetchCartData } from '../../utils/cartStore'
-import { API_URL } from '../../config/api'
-import { getImageUrl } from '../../utils/imageUtils' // ✅ Función importada
 
+const API_URL = import.meta.env.VITE_API_URL
 const router = useRouter()
 
 const formData = ref({
@@ -58,6 +57,8 @@ const subtotal = computed(() => cartState.total)
 const impuestos = computed(() => +(subtotal.value * 0.13).toFixed(2))
 const total = computed(() => +(subtotal.value + impuestos.value).toFixed(2))
 
+const getImageUrl = (path) => `${API_URL}${path}`
+
 const procesarCompra = async () => {
   if (!validarFechaExpiracion()) {
     alert('La fecha de expiración es inválida o ya venció.')
@@ -65,7 +66,7 @@ const procesarCompra = async () => {
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/ordenes`, {
+    const response = await fetch(`${API_URL}/ordenes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

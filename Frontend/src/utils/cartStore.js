@@ -1,6 +1,7 @@
 import { reactive } from 'vue'
 import { obtenerToken } from './auth'
-import { API_URL } from '../config/api'
+
+const API_URL = import.meta.env.VITE_API_URL
 
 const cartState = reactive({
   items: [],
@@ -49,7 +50,7 @@ const updateCartItem = async (servicioId, cantidad) => {
   try {
     const token = obtenerToken()
     if (!token) return
-    
+
     const response = await fetch(
       `${API_URL}/api/carrito/${servicioId}`,
       {
@@ -72,7 +73,7 @@ const removeCartItem = async (servicioId) => {
   try {
     const token = obtenerToken()
     if (!token) return
-    
+
     const response = await fetch(`${API_URL}/api/carrito/${servicioId}`, {
       method: 'DELETE',
       headers: {
@@ -86,4 +87,4 @@ const removeCartItem = async (servicioId) => {
   }
 }
 
-export { cartState, fetchCartData, updateCartItem, removeCartItem } 
+export { cartState, fetchCartData, updateCartItem, removeCartItem }

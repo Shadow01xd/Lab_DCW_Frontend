@@ -1,13 +1,13 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_URL } from '../config/api'
 
 const email = ref('')
 const mensaje = ref('')
 const error = ref('')
 const cargando = ref(false)
 
+const API_URL = import.meta.env.VITE_API_URL
 const router = useRouter()
 
 const solicitarRestablecimiento = async () => {
@@ -16,7 +16,7 @@ const solicitarRestablecimiento = async () => {
   error.value = ''
 
   try {
-    const response = await fetch(`${API_URL}/api/auth/forgotpassword`, {
+    const response = await fetch(`${API_URL}/auth/forgotpassword`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -46,6 +46,7 @@ const solicitarRestablecimiento = async () => {
   }
 }
 </script>
+
 
 <template>
   <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-rose-100">

@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { API_URL } from '../config/api'
 
 const email = ref('')
 const code = ref('')
@@ -11,11 +10,11 @@ const mensaje = ref('')
 const error = ref('')
 const cargando = ref(false)
 
+const API_URL = import.meta.env.VITE_API_URL
 const route = useRoute()
 const router = useRouter()
 
 onMounted(() => {
-  // Intentar precargar el email desde la URL (si viene de ForgotPassword.vue)
   if (route.query.email) {
     email.value = route.query.email
   }
@@ -39,7 +38,7 @@ const verificarCodigoYRestablecer = async () => {
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/auth/resetpassword`, {
+    const response = await fetch(`${API_URL}/auth/resetpassword`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -58,8 +57,7 @@ const verificarCodigoYRestablecer = async () => {
 
     const data = await response.json()
     mensaje.value = data.message || 'Contraseña restablecida correctamente.'
-    
-    // Redirigir al login después de un breve mensaje de éxito
+
     setTimeout(() => {
       router.push('/login')
     }, 3000)
@@ -72,6 +70,7 @@ const verificarCodigoYRestablecer = async () => {
   }
 }
 </script>
+
 
 <template>
   <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-rose-100">

@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import facebookIcon from '@/assets/icon/facebook.png'
 import twitterIcon from '@/assets/icon/twitter.png'
 import instagramIcon from '@/assets/icon/instagram.png'
-import linkedinIcon from '@/assets/icon/linkeding.png' // Asegúrate que el archivo exista
+import linkedinIcon from '@/assets/icon/linkedin.png' // Asegúrate que el archivo esté bien escrito
 
 // Redes sociales
 const redesSociales = [
@@ -37,7 +37,7 @@ const manejarSuscripcion = () => {
 
   estaSuscrito.value = true
   textoBoton.value = '¡Gracias por suscribirte!'
-  alert(`¡Gracias por suscribirte, ${emailNewsletter.value}}!`)
+  alert(`¡Gracias por suscribirte, ${emailNewsletter.value}!`)
   emailNewsletter.value = ''
 
   setTimeout(() => {
@@ -46,6 +46,7 @@ const manejarSuscripcion = () => {
   }, 5000)
 }
 </script>
+
 
 <template>
   <footer class="bg-gradient-to-r from-zinc-800 to-zinc-900 text-white py-16">

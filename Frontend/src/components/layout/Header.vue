@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
-import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import logo from '@/assets/img/d8624d2c-5598-49f5-a392-f666ed71d940.png'
 import { obtenerUsuario, cerrarSesion } from '@/utils/auth'
 import { cartState, fetchCartData, updateCartItem, removeCartItem } from '@/utils/cartStore'
@@ -48,11 +48,13 @@ const actualizarCantidadResumen = async (servicioId, event) => {
   const nuevaCantidad = parseInt(event.target.value)
   if (isNaN(nuevaCantidad) || nuevaCantidad < 1) return
   await updateCartItem(servicioId, nuevaCantidad)
+  await fetchCartData() // Actualiza después del cambio
 }
 
 const quitarItemResumen = async (servicioId) => {
   if (confirm('¿Estás seguro de que quieres eliminar este servicio del carrito?')) {
     await removeCartItem(servicioId)
+    await fetchCartData()
   }
 }
 
@@ -76,6 +78,7 @@ const subtotal = computed(() => cartState.total)
 const impuestos = computed(() => +(subtotal.value * 0.13).toFixed(2))
 const totalFinal = computed(() => +(subtotal.value + impuestos.value).toFixed(2))
 </script>
+
 
 <template>
   <header class="fixed w-full top-0 z-50 bg-white/90 shadow-md transition-all duration-300">

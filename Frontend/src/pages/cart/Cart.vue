@@ -5,8 +5,8 @@ import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
 import { cartState, fetchCartData, updateCartItem, removeCartItem } from '@/utils/cartStore'
 import { RouterLink, useRouter } from 'vue-router'
-import { getImageUrl as baseImageUrl, getTechnologyImageUrl } from '../utils/imageUtils'
 
+const API_URL = import.meta.env.VITE_API_URL
 const usuario = ref(null)
 const hoveredServiceId = ref(null)
 
@@ -24,9 +24,11 @@ const actualizarCantidadEnCarrito = async (servicioId, nuevaCantidad) => {
   }
   await updateCartItem(servicioId, nuevaCantidad)
 }
+
 const quitarDelCarrito = async (servicioId) => {
   await removeCartItem(servicioId)
 }
+
 const confirmarEliminar = (servicioId) => {
   if (confirm('¿Estás seguro de que quieres eliminar este servicio del carrito?')) {
     quitarDelCarrito(servicioId)
@@ -43,18 +45,18 @@ const irAlCheckout = () => {
   router.push('/checkout')
 }
 
-// Evita recursión y usa el import base
-const getImageUrl = (imagePath) => {
-  if (imagePath.includes('technologies')) {
-    return getTechnologyImageUrl(imagePath)
+const getTechnologyImageUrl = (imagePath) => {
+  if (imagePath && !imagePath.startsWith('/uploads/technologies/')) {
+    return `${API_URL}/uploads/technologies/${imagePath.substring(imagePath.lastIndexOf('/') + 1)}`
   }
-  return baseImageUrl(imagePath)
+  return `${API_URL}${imagePath}`
 }
 
 const subtotal = computed(() => cartState.total)
 const impuestos = computed(() => +(subtotal.value * 0.13).toFixed(2))
 const totalFinal = computed(() => +(subtotal.value + impuestos.value).toFixed(2))
 </script>
+
 
 <template>
   <Header />
@@ -92,7 +94,7 @@ const totalFinal = computed(() => +(subtotal.value + impuestos.value).toFixed(2)
               @mouseover="showTechnologiesHover(item.servicioId._id)" @mouseleave="hideTechnologiesHover()">
               <div class="flex flex-col md:flex-row gap-6">
                 <div class="flex-shrink-0">
-                  <img v-if="item.servicioId.imagen" :src="getImageUrl(item.servicioId.imagen)"
+                  <img v-if="item.servicioId.imagen" :src="'http://localhost:5000' + item.servicioId.imagen"
                     :alt="item.servicioId.nombre" class="w-32 h-32 object-cover rounded-lg border border-gray-200" />
                 </div>
                 <div class="flex-grow">

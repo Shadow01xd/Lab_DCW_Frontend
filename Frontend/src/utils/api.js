@@ -1,31 +1,36 @@
-import { API_URL } from '../config/api';
+const API_URL = import.meta.env.VITE_API_URL // <- PRODUCCIÓN seguro
 
 // 🟢 Login de usuario
-export const login = async (credentials) => {
-  const res = await fetch(`${API_URL}/api/auth/login`, {
+export async function login(email, password) {
+  const res = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(credentials),
-  });
-  return res.json();
-};
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  })
+  return await res.json()
+}
 
 // 🟣 Registro: permite enviar rol y token opcional para crear admin
-export const register = async (userData) => {
-  const res = await fetch(`${API_URL}/api/auth/register`, {
+export async function register(nombre, email, password, rol = 'cliente', token = null) {
+  const headers = {
+    'Content-Type': 'application/json'
+  }
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const res = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
-  });
-  return res.json();
-};
+    headers,
+    body: JSON.stringify({ nombre, email, password, rol })
+  })
+
+  return await res.json()
+}
 
 // 🔵 Obtener lista de servicios (sin autenticación)
-export const getProducts = async () => {
-  const res = await fetch(`${API_URL}/api/productos`);
-  return res.json();
-};
+export async function getServicios() {
+  const res = await fetch(`${API_URL}/productos`)
+  return await res.json()
+}

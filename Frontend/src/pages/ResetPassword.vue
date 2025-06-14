@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { API_URL } from '../config/api'
 
 const password = ref('')
 const confirmPassword = ref('')
@@ -9,6 +8,7 @@ const mensaje = ref('')
 const error = ref('')
 const cargando = ref(false)
 const token = ref('')
+const API_URL = import.meta.env.VITE_API_URL
 
 const route = useRoute()
 const router = useRouter()
@@ -38,7 +38,7 @@ const resetearContrasena = async () => {
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/auth/resetpassword/${token.value}`, {
+    const response = await fetch(`${API_URL}/auth/resetpassword/${token.value}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -55,8 +55,7 @@ const resetearContrasena = async () => {
 
     const data = await response.json()
     mensaje.value = data.message || 'Contraseña restablecida correctamente.'
-    
-    // Redirigir al login después de un breve mensaje de éxito
+
     setTimeout(() => {
       router.push('/login')
     }, 3000)
@@ -69,6 +68,7 @@ const resetearContrasena = async () => {
   }
 }
 </script>
+
 
 <template>
   <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-rose-100">
