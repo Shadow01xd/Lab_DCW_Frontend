@@ -12,11 +12,6 @@ const cargando = ref(false)
 const router = useRouter()
 
 const realizarLogin = async () => {
-  if (!email.value || !password.value) {
-    error.value = 'Por favor, completa todos los campos'
-    return
-  }
-
   console.log('[✔] Se ejecutó realizarLogin')
   cargando.value = true
   error.value = ''
@@ -39,7 +34,7 @@ const realizarLogin = async () => {
     }
   } catch (err) {
     console.error('[❌] Error:', err)
-    error.value = err.message || 'Error al conectar con el servidor.'
+    error.value = 'Error al conectar con el servidor.'
   }
 
   cargando.value = false
@@ -52,20 +47,14 @@ const realizarLogin = async () => {
       <h2 class="text-2xl font-bold text-center text-violet-600 mb-6">Iniciar sesión</h2>
 
       <form @submit.prevent="realizarLogin" class="space-y-4">
-        <div>
-          <input v-model="email" type="email" placeholder="Correo electrónico" required
+        <input v-model="email" type="email" placeholder="Correo electrónico"
                class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
-        </div>
-        <div>
-          <input v-model="password" type="password" placeholder="Contraseña" required
+        <input v-model="password" type="password" placeholder="Contraseña"
                class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
-        </div>
 
         <p v-if="error" class="text-red-600 text-sm text-center">{{ error }}</p>
 
-        <button type="submit" 
-                class="bg-violet-600 text-white p-3 rounded w-full hover:bg-violet-700 transition-colors"
-                :disabled="cargando">
+        <button type="submit" class="bg-violet-600 text-white p-3 rounded w-full">
           {{ cargando ? 'Entrando...' : 'Ingresar' }}
         </button>
       </form>

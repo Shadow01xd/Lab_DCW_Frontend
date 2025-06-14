@@ -6,8 +6,6 @@ import Footer from '../../components/layout/Footer.vue'
 import { cartState, fetchCartData } from '../../utils/cartStore'
 
 const router = useRouter()
-const error = ref('')
-const cargando = ref(false)
 
 const formData = ref({
   nombre: '',
@@ -21,10 +19,6 @@ const formData = ref({
 })
 
 onMounted(() => {
-  if (!cartState.items.length) {
-    router.push('/cart')
-    return
-  }
   fetchCartData()
 })
 
@@ -58,45 +52,20 @@ const validarFechaExpiracion = () => {
   return expDate > now
 }
 
-const validarFormulario = () => {
-  if (!formData.value.nombre || !formData.value.apellido || !formData.value.direccion || 
-      !formData.value.ciudad || !formData.value.codigoPostal) {
-    error.value = 'Por favor, completa todos los campos de envío'
-    return false
-  }
-
-  if (!formData.value.numeroTarjeta || formData.value.numeroTarjeta.replace(/\s/g, '').length !== 16) {
-    error.value = 'Número de tarjeta inválido'
-    return false
-  }
-
-  if (!validarFechaExpiracion()) {
-    error.value = 'La fecha de expiración es inválida o ya venció'
-    return false
-  }
-
-  if (!formData.value.cvv || formData.value.cvv.length !== 3) {
-    error.value = 'CVV inválido'
-    return false
-  }
-
-  return true
-}
-
 const subtotal = computed(() => cartState.total)
 const impuestos = computed(() => +(subtotal.value * 0.13).toFixed(2))
 const total = computed(() => +(subtotal.value + impuestos.value).toFixed(2))
 
-const getImageUrl = (path) => `https://laboratorio-dcw-production.up.railway.app${path}`
+const getImageUrl = (path) => `https://laboratoriodcw-production.up.railway.app${path}`
 
 const procesarCompra = async () => {
-  if (!validarFormulario()) return
-
-  cargando.value = true
-  error.value = ''
+  if (!validarFechaExpiracion()) {
+    alert('La fecha de expiración es inválida o ya venció.')
+    return
+  }
 
   try {
-    const response = await fetch('https://laboratorio-dcw-production.up.railway.app/api/ordenes', {
+    const response = await fetch('https://laboratoriodcw-production.up.railway.app/api/ordenes', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -105,8 +74,7 @@ const procesarCompra = async () => {
       body: JSON.stringify({
         items: cartState.items.map(item => ({
           producto_id: item.servicioId._id,
-          cantidad: item.cantidad,
-          tecnologias: item.tecnologiasSeleccionadas || []
+          cantidad: item.cantidad
         })),
         direccion: {
           nombre: formData.value.nombre,
@@ -114,24 +82,18 @@ const procesarCompra = async () => {
           direccion: formData.value.direccion,
           ciudad: formData.value.ciudad,
           codigoPostal: formData.value.codigoPostal
-        },
-        total: total.value
+        }
       })
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || 'Error al procesar la compra')
-    }
+    if (!response.ok) throw new Error('Error al procesar la compra')
 
     cartState.items = []
     localStorage.removeItem('cart')
     router.push('/confirmacion')
   } catch (err) {
     console.error(err)
-    error.value = err.message || 'Hubo un error al procesar tu compra'
-  } finally {
-    cargando.value = false
+    alert('Hubo un error al procesar tu compra.')
   }
 }
 </script>
@@ -143,10 +105,6 @@ const procesarCompra = async () => {
       <h1 class="text-3xl font-bold text-violet-700 mb-6 flex items-center gap-2">
         <span class="text-4xl">💳</span> Finalizar Compra
       </h1>
-
-      <div v-if="error" class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-        <span class="block sm:inline">{{ error }}</span>
-      </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Formulario -->
@@ -222,9 +180,8 @@ const procesarCompra = async () => {
 
             <!-- Botón -->
             <button type="submit"
-                    :disabled="cargando"
-                    class="w-full bg-violet-600 text-white py-3 rounded-xl shadow-md hover:bg-violet-700 hover:shadow-lg transition-all duration-300 text-lg font-semibold tracking-wide disabled:opacity-50 disabled:cursor-not-allowed">
-              {{ cargando ? 'Procesando...' : 'Confirmar Compra' }}
+                    class="w-full bg-violet-600 text-white py-3 rounded-xl shadow-md hover:bg-violet-700 hover:shadow-lg transition-all duration-300 text-lg font-semibold tracking-wide">
+              Confirmar Compra
             </button>
           </form>
         </div>
@@ -234,8 +191,7 @@ const procesarCompra = async () => {
           <h2 class="text-xl font-bold text-gray-800 mb-6">🧾 Resumen del Pedido</h2>
           <div class="space-y-4">
             <div v-for="item in cartState.items" :key="item.servicioId._id" class="flex items-center space-x-4">
-              <img :src="getImageUrl(item.servicioId.imagen)" :alt="item.servicioId.nombre"
-                   class="w-20 h-20 object-cover rounded-xl border" />
+              <img :src="getImageUrl(item.servicioId.imagen)" class="w-20 h-20 object-cover rounded-xl border" />
               <div class="flex-1">
                 <h3 class="text-sm font-semibold text-gray-900">{{ item.servicioId.nombre }}</h3>
                 <p class="text-sm text-gray-500">Cantidad: {{ item.cantidad }}</p>

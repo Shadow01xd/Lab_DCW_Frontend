@@ -33,7 +33,7 @@ export default {
 
     const fetchServices = async () => {
       try {
-        const response = await fetch('https://laboratorio-dcw-production.up.railway.app')
+        const response = await fetch('https://laboratoriodcw-production.up.railway.app/api/servicios')
         if (!response.ok) {
           throw new Error('Error en la respuesta del servidor')
         }

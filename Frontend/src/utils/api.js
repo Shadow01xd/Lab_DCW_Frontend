@@ -1,4 +1,4 @@
-const API_URL = 'https://laboratorio-dcw-production.up.railway.app/api' // Railway Production URL
+const API_URL = 'https://laboratoriodcw-production.up.railway.app/api' // LOCAL, asegurado
 
 // 🟢 Login de usuario
 export async function login(email, password) {
@@ -32,28 +32,5 @@ export async function register(nombre, email, password, rol = 'cliente', token =
 // 🔵 Obtener lista de servicios (sin autenticación)
 export async function getServicios() {
   const res = await fetch(`${API_URL}/productos`)
-  return await res.json()
-}
-
-// 🟡 Función helper para peticiones autenticadas
-export async function fetchWithAuth(endpoint, options = {}) {
-  const token = localStorage.getItem('token')
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
-    ...options.headers
-  }
-
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers
-  })
-
-  if (res.status === 401) {
-    localStorage.removeItem('token')
-    window.location.href = '/login'
-    throw new Error('Sesión expirada')
-  }
-
   return await res.json()
 }

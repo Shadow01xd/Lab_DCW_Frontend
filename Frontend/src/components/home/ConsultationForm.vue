@@ -66,7 +66,7 @@ const enviarFormulario = async () => {
   error.value = ''
 
   try {
-    const response = await fetch('https://laboratorio-dcw-production.up.railway.app', {
+    const response = await fetch('https://laboratoriodcw-production.up.railway.app/api/consultas', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
