@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { API_URL } from '../config/api'
 
 const password = ref('')
 const confirmPassword = ref('')
@@ -37,7 +38,7 @@ const resetearContrasena = async () => {
   }
 
   try {
-    const response = await fetch(`http://localhost:5000/api/auth/resetpassword/${token.value}`, {
+    const response = await fetch(`${API_URL}/api/auth/resetpassword/${token.value}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'

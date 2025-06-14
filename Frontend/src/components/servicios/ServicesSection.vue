@@ -8,6 +8,7 @@ import icon5 from '@/assets/icon/marketing_digital.png'
 import icon6 from '@/assets/icon/e-commerce.png'
 import ServiceCardAuthenticated from './ServiceCardAuthenticated.vue'
 import ServiceDetailModal from './ServiceDetailModal.vue'
+import { API_URL } from '../../config/api'
 
 // Función para obtener el token de autenticación
 function obtenerToken() {
@@ -70,7 +71,7 @@ const addToCart = async (serviceData) => {
     // Extraer los datos necesarios del objeto serviceData
     const { _id: servicioId, tecnologiasSeleccionadas, precioTotal } = serviceData
 
-    const response = await fetch('http://localhost:5000/api/carrito', {
+    const response = await fetch(`${API_URL}/api/carrito`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -116,7 +117,7 @@ const fetchServices = async () => {
       error.value = 'No estás autenticado para ver los servicios de la base de datos.'
       return
     }
-    const response = await fetch('http://localhost:5000/api/servicios', {
+    const response = await fetch(`${API_URL}/api/servicios`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

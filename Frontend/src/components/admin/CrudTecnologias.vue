@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { obtenerToken } from '@/utils/auth'
+import { API_URL } from '../../config/api'
+import { getImageUrl } from '../../utils/imageUtils'
 
 const tecnologias = ref([])
 const mostrarFormulario = ref(false)
@@ -32,7 +34,7 @@ const totalPaginas = computed(() => Math.ceil(tecnologias.value.length / porPagi
 
 const fetchTechnologies = async () => {
   try {
-    const response = await fetch('http://localhost:5000/api/tecnologias')
+    const response = await fetch(`${API_URL}/api/tecnologias`)
     if (!response.ok) throw new Error('Error al obtener tecnologías')
     const data = await response.json()
     tecnologias.value = data
@@ -63,8 +65,8 @@ const guardarTecnologia = async () => {
 
     const token = obtenerToken()
     const url = tecnologiaEditando.value
-      ? `http://localhost:5000/api/tecnologias/${tecnologiaEditando.value._id}`
-      : 'http://localhost:5000/api/tecnologias'
+      ? `${API_URL}/api/tecnologias/${tecnologiaEditando.value._id}`
+      : `${API_URL}/api/tecnologias`
     const method = tecnologiaEditando.value ? 'PUT' : 'POST'
 
     const response = await fetch(url, {
@@ -98,7 +100,7 @@ const eliminarTecnologia = async (id) => {
   if (!confirm('¿Eliminar esta tecnología?')) return
   try {
     const token = obtenerToken()
-    const response = await fetch(`http://localhost:5000/api/tecnologias/${id}`, {
+    const response = await fetch(`${API_URL}/api/tecnologias/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -144,7 +146,7 @@ onMounted(fetchTechnologies)
           </thead>
           <tbody class="bg-gray-800 divide-y divide-gray-700">
             <tr v-for="tech in tecnologiasPaginadas" :key="tech._id" class="hover:bg-violet-800 transition">
-              <td class="px-6 py-4"><img :src="`http://localhost:5000${tech.image}`" class="h-12 w-12 object-cover rounded" /></td>
+              <td class="px-6 py-4"><img :src="getImageUrl(tech.image)" class="h-12 w-12 object-cover rounded" /></td>
               <td class="px-6 py-4">{{ tech.name }}</td>
               <td class="px-6 py-4">{{ tech.description }}</td>
               <td class="px-6 py-4">${{ tech.price }}</td>

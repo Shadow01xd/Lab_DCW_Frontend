@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import Header from '../../components/layout/Header.vue'
 import Footer from '../../components/layout/Footer.vue'
 import { cartState, fetchCartData } from '../../utils/cartStore'
+import { API_URL } from '../../config/api'
+import { getImageUrl } from '../../utils/imageUtils'
 
 const router = useRouter()
 
@@ -56,7 +58,7 @@ const subtotal = computed(() => cartState.total)
 const impuestos = computed(() => +(subtotal.value * 0.13).toFixed(2))
 const total = computed(() => +(subtotal.value + impuestos.value).toFixed(2))
 
-const getImageUrl = (path) => `http://localhost:5000${path}`
+const getImageUrl = (path) => getImageUrl(path)
 
 const procesarCompra = async () => {
   if (!validarFechaExpiracion()) {
@@ -65,7 +67,7 @@ const procesarCompra = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:5000/api/ordenes', {
+    const response = await fetch(`${API_URL}/api/ordenes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

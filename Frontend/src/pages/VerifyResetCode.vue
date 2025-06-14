@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { API_URL } from '../config/api'
 
 const email = ref('')
 const code = ref('')
@@ -38,7 +39,7 @@ const verificarCodigoYRestablecer = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:5000/api/auth/resetpassword', {
+    const response = await fetch(`${API_URL}/api/auth/resetpassword`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'

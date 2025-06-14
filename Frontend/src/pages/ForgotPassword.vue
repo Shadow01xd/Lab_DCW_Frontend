@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { API_URL } from '../config/api'
 
 const email = ref('')
 const mensaje = ref('')
@@ -15,7 +16,7 @@ const solicitarRestablecimiento = async () => {
   error.value = ''
 
   try {
-    const response = await fetch('http://localhost:5000/api/auth/forgotpassword', {
+    const response = await fetch(`${API_URL}/api/auth/forgotpassword`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

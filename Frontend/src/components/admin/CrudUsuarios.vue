@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch, defineProps, computed } from 'vue'
 import { obtenerToken } from '@/utils/auth'
+import { API_URL } from '../../config/api'
 
 const props = defineProps({ refetch: { type: Number, default: 0 } })
 
@@ -28,7 +29,7 @@ const fetchUsers = async () => {
       error.value = 'No estás autenticado para ver los usuarios.'
       return
     }
-    const response = await fetch('http://localhost:5000/api/admin/usuarios', {
+    const response = await fetch(`${API_URL}/api/admin/usuarios`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -55,7 +56,7 @@ const deleteUser = async (id) => {
       error.value = 'No estás autenticado para eliminar usuarios.'
       return
     }
-    const response = await fetch(`http://localhost:5000/api/admin/usuarios/${id}`, {
+    const response = await fetch(`${API_URL}/api/admin/usuarios/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -79,7 +80,7 @@ const updateUser = async (usuario) => {
       error.value = 'No estás autenticado para actualizar usuarios.'
       return
     }
-    const response = await fetch(`http://localhost:5000/api/admin/usuarios/${usuario._id}`, {
+    const response = await fetch(`${API_URL}/api/admin/usuarios/${usuario._id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

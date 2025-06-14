@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
 import { cartState, fetchCartData, updateCartItem, removeCartItem } from '@/utils/cartStore'
 import { RouterLink, useRouter } from 'vue-router'
+import { getImageUrl, getTechnologyImageUrl } from '../utils/imageUtils'
 
 const usuario = ref(null)
 const hoveredServiceId = ref(null)
@@ -42,11 +43,11 @@ const irAlCheckout = () => {
   router.push('/checkout')
 }
 
-const getTechnologyImageUrl = (imagePath) => {
-  if (imagePath && !imagePath.startsWith('/uploads/technologies/')) {
-    return `http://localhost:5000/uploads/technologies/${imagePath.substring(imagePath.lastIndexOf('/') + 1)}`
+const getImageUrl = (imagePath) => {
+  if (imagePath.includes('technologies')) {
+    return getTechnologyImageUrl(imagePath);
   }
-  return `http://localhost:5000${imagePath}`
+  return getImageUrl(imagePath);
 }
 
 // Corrección del cálculo
@@ -91,7 +92,7 @@ const totalFinal = computed(() => +(subtotal.value + impuestos.value).toFixed(2)
               @mouseover="showTechnologiesHover(item.servicioId._id)" @mouseleave="hideTechnologiesHover()">
               <div class="flex flex-col md:flex-row gap-6">
                 <div class="flex-shrink-0">
-                  <img v-if="item.servicioId.imagen" :src="'http://localhost:5000' + item.servicioId.imagen"
+                  <img v-if="item.servicioId.imagen" :src="getImageUrl(item.servicioId.imagen)"
                     :alt="item.servicioId.nombre" class="w-32 h-32 object-cover rounded-lg border border-gray-200" />
                 </div>
                 <div class="flex-grow">

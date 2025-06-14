@@ -4,6 +4,7 @@ import { obtenerUsuario } from '@/utils/auth'
 import { useRouter } from 'vue-router'
 import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
+import { API_URL } from '../config/api'
 
 const router = useRouter()
 const usuario = ref({
@@ -45,7 +46,7 @@ const guardarCambios = async () => {
       throw new Error('No hay sesión activa')
     }
 
-    const response = await fetch('http://localhost:5000/api/usuarios/update-profile', {
+    const response = await fetch(`${API_URL}/api/usuarios/update-profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

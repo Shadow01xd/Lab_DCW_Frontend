@@ -12,7 +12,7 @@
       <div class="flex-1 flex items-center justify-center">
         <img
           v-if="service.imagen"
-          :src="'http://localhost:5000' + service.imagen"
+          :src="getImageUrl(service.imagen)"
           :alt="service.nombre"
           class="max-h-full max-w-full object-contain rounded-lg shadow-lg border border-gray-100" />
       </div>
@@ -56,7 +56,7 @@
                 <div class="flex items-center gap-3">
                   <img
                     v-if="tech.image"
-                    :src="`http://localhost:5000${tech.image}`"
+                    :src="getImageUrl(tech.image)"
                     :alt="tech.name"
                     class="h-8 w-8 object-cover rounded-full"
                   />
@@ -94,6 +94,8 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { API_URL } from '../../config/api'
+import { getImageUrl } from '../../utils/imageUtils'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -145,7 +147,7 @@ const precioTotal = computed(() => {
 const fetchTechnologies = async () => {
   try {
     const token = localStorage.getItem('token')
-    const response = await fetch('http://localhost:5000/api/tecnologias', {
+    const response = await fetch(`${API_URL}/api/tecnologias`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

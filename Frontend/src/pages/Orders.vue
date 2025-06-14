@@ -44,7 +44,7 @@
 
           <div class="space-y-4">
             <div v-for="item in order.items" :key="item._id" class="flex gap-4 p-4 bg-gray-50 rounded-lg">
-              <img v-if="item.servicio.imagen" :src="'http://localhost:5000' + item.servicio.imagen"
+              <img v-if="item.servicio.imagen" :src="getImageUrl(item.servicio.imagen)"
                 :alt="item.servicio.nombre" class="w-20 h-20 object-cover rounded-lg" />
               <div class="flex-grow">
                 <h4 class="font-medium text-gray-800">{{ item.servicio.nombre }}</h4>
@@ -91,6 +91,8 @@ import { ref, onMounted } from 'vue'
 import Header from '../components/layout/Header.vue'
 import Footer from '../components/layout/Footer.vue'
 import { obtenerUsuario } from '@/utils/auth'
+import { API_URL } from '../config/api'
+import { getImageUrl } from '../utils/imageUtils'
 
 const orders = ref([])
 const loading = ref(true)
@@ -98,7 +100,7 @@ const error = ref(null)
 
 const fetchOrders = async () => {
   try {
-    const response = await fetch('http://localhost:5000/api/ordenes', {
+    const response = await fetch(`${API_URL}/api/ordenes`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
