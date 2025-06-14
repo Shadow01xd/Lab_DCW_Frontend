@@ -164,48 +164,51 @@ onMounted(fetchServices)
 </script>
 
 <template>
-  <div class="space-y-6 text-white animate-fade-in">
+  <div class="space-y-6 text-white">
     <!-- TABLA -->
-    <div class="bg-gray-900 rounded-xl shadow-xl p-6 ring-1 ring-violet-800">
-      <h2 class="text-2xl font-bold mb-4 text-violet-400">Servicios Existentes</h2>
+    <div class="bg-gray-900 rounded-lg shadow-lg p-6">
+      <h2 class="text-2xl font-bold mb-4">Servicios Existentes</h2>
+
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-700">
-          <thead class="bg-violet-700 text-white">
+          <thead class="bg-[#a020f0]">
             <tr>
-              <th class="px-4 py-2 text-left text-sm font-semibold">Imagen</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold">Nombre</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold">Descripción</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold">Costo</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold">Categoría</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold">Acciones</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Imagen</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Nombre</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Descripción</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Costo</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Categoría</th>
+              <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-700 bg-gray-800">
+          <tbody class="bg-gray-800 divide-y divide-gray-700">
             <tr v-for="s in serviciosPaginados" :key="s._id" class="hover:bg-violet-800 transition">
               <template v-if="modoEdicion === s._id">
-                <td class="px-4 py-2"><input type="file" @change="e => (s.imagen = e.target.files[0])" /></td>
-                <td class="px-4 py-2"><input v-model="s.nombre" class="input-dark" /></td>
-                <td class="px-4 py-2"><textarea v-model="s.descripcion" class="input-dark" /></td>
-                <td class="px-4 py-2"><input v-model="s.costo" type="number" class="input-dark" /></td>
-                <td class="px-4 py-2">
+                <td class="px-6 py-4"><input type="file" @change="e => (s.imagen = e.target.files[0])" /></td>
+                <td class="px-6 py-4"><input v-model="s.nombre" class="input-dark" /></td>
+                <td class="px-6 py-4"><textarea v-model="s.descripcion" class="input-dark" /></td>
+                <td class="px-6 py-4"><input v-model="s.costo" type="number" class="input-dark" /></td>
+                <td class="px-6 py-4">
                   <select v-model="s.categoria" class="input-dark">
-                    <option value="" disabled>— Selecciona —</option>
+                    <option disabled value="">— Selecciona —</option>
                     <option v-for="c in categorias" :key="c.value" :value="c.value">{{ c.label }}</option>
                   </select>
                 </td>
-                <td class="px-4 py-2 text-center space-x-2">
-                  <button @click="updateService(s)" class="btn-green">Guardar</button>
-                  <button @click="modoEdicion = null" class="btn-gray">Cancelar</button>
+                <td class="px-6 py-4 space-x-2">
+                  <button @click="updateService(s)" class="text-green-400 hover:text-white">Guardar</button>
+                  <button @click="modoEdicion = null" class="text-gray-400 hover:text-white">Cancelar</button>
                 </td>
               </template>
               <template v-else>
-                <td class="px-4 py-2"><img :src="getImg(s.imagen)" class="h-12 w-12 rounded object-cover" /></td>
-                <td class="px-4 py-2">{{ s.nombre }}</td>
-                <td class="px-4 py-2">{{ s.descripcion }}</td>
-                <td class="px-4 py-2">${{ s.costo }}</td>
-                <td class="px-4 py-2 capitalize">{{ categorias.find(c => c.value === s.categoria)?.label }}</td>
-                <td class="px-4 py-2 text-center space-x-2">
-                  <button @click="modoEdicion = s._id" class="text-violet-300 hover:text-white">Editar</button>
+                <td class="px-6 py-4">
+                  <img :src="getImg(s.imagen)" class="h-12 w-12 rounded object-cover shadow" />
+                </td>
+                <td class="px-6 py-4">{{ s.nombre }}</td>
+                <td class="px-6 py-4">{{ s.descripcion }}</td>
+                <td class="px-6 py-4 text-green-400 font-semibold">${{ s.costo }}</td>
+                <td class="px-6 py-4 capitalize">{{ categorias.find(c => c.value === s.categoria)?.label }}</td>
+                <td class="px-6 py-4">
+                  <button @click="modoEdicion = s._id" class="text-blue-400 hover:text-white mr-3">Editar</button>
                   <button @click="deleteService(s._id)" class="text-red-400 hover:text-red-200">Eliminar</button>
                 </td>
               </template>
@@ -216,21 +219,28 @@ onMounted(fetchServices)
     </div>
 
     <!-- Paginación -->
-    <div v-if="totalPaginas > 1" class="flex justify-center gap-4">
-      <button @click="paginaActual--" :disabled="paginaActual === 1" class="btn-violet">Anterior</button>
-      <span class="text-white">{{ paginaActual }} / {{ totalPaginas }}</span>
-      <button @click="paginaActual++" :disabled="paginaActual === totalPaginas" class="btn-violet">Siguiente</button>
+    <div v-if="totalPaginas > 1" class="flex justify-center gap-2 text-white">
+      <button @click="paginaActual--" :disabled="paginaActual === 1"
+        class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1 rounded disabled:opacity-40">Anterior</button>
+      <span>{{ paginaActual }} / {{ totalPaginas }}</span>
+      <button @click="paginaActual++" :disabled="paginaActual === totalPaginas"
+        class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1 rounded disabled:opacity-40">Siguiente</button>
     </div>
 
     <!-- Botón Crear -->
     <div v-if="!mostrarFormulario" class="flex justify-center">
-      <button @click="mostrarFormulario = true" class="btn-violet px-6 py-3">Agregar Servicio</button>
+      <button @click="mostrarFormulario = true"
+        class="bg-[#a020f0] hover:bg-violet-600 text-white font-semibold px-6 py-3 rounded-xl shadow">
+        Crear Servicio
+      </button>
     </div>
 
     <!-- Formulario Crear -->
-    <div v-if="mostrarFormulario" class="bg-gray-900 text-white p-6 rounded-lg shadow-xl max-w-2xl mx-auto animate-fade-in ring-1 ring-violet-700">
-      <h3 class="text-2xl font-semibold mb-4">{{ nuevoServicio.nombre ? 'Editar' : 'Agregar nuevo' }} Servicio</h3>
-      <div class="grid md:grid-cols-2 gap-4">
+    <div v-if="mostrarFormulario"
+      class="bg-gray-900 text-white p-6 rounded-lg shadow-xl max-w-2xl mx-auto animate-fade-in">
+      <h3 class="text-2xl font-semibold mb-4">Crear nuevo servicio</h3>
+
+      <form @submit.prevent="createService" class="grid md:grid-cols-2 gap-6">
         <div class="space-y-3">
           <input v-model="nuevoServicio.nombre" placeholder="Nombre" class="input-dark" />
           <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción" class="input-dark" />
@@ -240,6 +250,7 @@ onMounted(fetchServices)
             <option v-for="cat in categorias" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
           </select>
         </div>
+
         <div class="space-y-4">
           <div class="border border-dashed border-violet-400 rounded-lg p-4 text-center">
             <input id="img-svc" type="file" class="hidden" @change="handleImagen" />
@@ -248,29 +259,25 @@ onMounted(fetchServices)
             </label>
             <img v-if="imagenPreview" :src="imagenPreview" class="mt-3 h-40 mx-auto object-cover rounded shadow" />
           </div>
-          <button @click="createService" class="btn-violet w-full">Crear</button>
-          <button @click="mostrarFormulario = false" class="btn-gray w-full">Cancelar</button>
+          <button type="submit" class="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-2 rounded w-full">
+            Crear
+          </button>
+          <button @click="mostrarFormulario = false"
+            class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded w-full">
+            Cancelar
+          </button>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 </template>
 
 <style scoped>
 .input-dark {
-  @apply block w-full rounded-md bg-gray-800 text-white border border-gray-600 p-2 focus:ring-violet-500 focus:border-violet-500;
-}
-.btn-violet {
-  @apply px-4 py-2 rounded bg-violet-600 text-white hover:bg-violet-700 transition disabled:opacity-50;
-}
-.btn-gray {
-  @apply px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700 transition;
-}
-.btn-green {
-  @apply px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition;
+  @apply w-full bg-gray-800 border border-gray-600 text-white p-2 rounded focus:ring-violet-500 focus:border-violet-500;
 }
 @keyframes fade-in {
-  0% { opacity: 0; transform: translateY(10px); }
+  0% { opacity: 0; transform: translateY(12px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in {
