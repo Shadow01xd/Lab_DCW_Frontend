@@ -164,132 +164,118 @@ onMounted(fetchServices)
 </script>
 
 <template>
-  <div class="space-y-8 bg-gray-50 p-6 rounded-xl shadow-md">
-
-    <p v-if="error" class="text-center text-red-600 font-medium">{{ error }}</p>
-
-    <!-- Tabla -->
-    <div class="overflow-x-auto rounded-lg shadow ring-1 ring-gray-300 bg-white">
-      <table
-        v-if="!cargando && validServicios.length"
-        class="w-full min-w-[800px] text-sm text-gray-700"
-      >
-        <thead class="bg-violet-600 text-white text-xs uppercase sticky top-0 z-10">
-          <tr>
-            <th class="p-3 text-left">Imagen</th>
-            <th class="p-3 text-left">Nombre</th>
-            <th class="p-3 text-left">Descripción</th>
-            <th class="p-3 text-left">Costo</th>
-            <th class="p-3 text-left">Categoría</th>
-            <th class="p-3 text-center">Acciones</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr
-            v-for="s in serviciosPaginados"
-            :key="s._id"
-            class="border-b hover:bg-violet-50 transition"
-          >
-            <!-- Edición -->
-            <template v-if="modoEdicion === s._id">
-              <td class="p-2"><input type="file" @change="e => (s.imagen = e.target.files[0])" /></td>
-              <td class="p-2"><input v-model="s.nombre" class="w-full rounded border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-violet-400" /></td>
-              <td class="p-2"><textarea v-model="s.descripcion" class="w-full rounded border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-violet-400" /></td>
-              <td class="p-2"><input v-model="s.costo" type="number" class="w-full rounded border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-violet-400" /></td>
-              <td class="p-2">
-                <select v-model="s.categoria" class="w-full rounded border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-violet-400">
-                  <option value="" disabled>— Selecciona —</option>
-                  <option v-for="c in categorias" :key="c.value" :value="c.value">{{ c.label }}</option>
-                </select>
-              </td>
-              <td class="p-2 text-center space-x-2">
-                <button @click="updateService(s)" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Guardar</button>
-                <button @click="modoEdicion = null" class="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500">Cancelar</button>
-              </td>
-            </template>
-
-            <!-- Vista normal -->
-            <template v-else>
-              <td class="p-2">
-                <img :src="getImg(s.imagen)" class="h-16 w-16 rounded object-cover shadow-sm" />
-              </td>
-              <td class="p-2 font-medium">{{ s.nombre }}</td>
-              <td class="p-2">{{ s.descripcion }}</td>
-              <td class="p-2 font-semibold text-green-700">${{ s.costo }}</td>
-              <td class="p-2 capitalize">{{ categorias.find(c => c.value === s.categoria)?.label || 'Sin categoría' }}</td>
-              <td class="p-2 text-center space-x-2">
-                <button @click="modoEdicion = s._id" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Editar</button>
-                <button @click="deleteService(s._id)" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Eliminar</button>
-              </td>
-            </template>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Sin servicios -->
-      <div v-else-if="!cargando && !validServicios.length" class="py-12 text-center text-gray-500 text-lg">
-        No hay servicios registrados.
+  <div class="space-y-6 text-white animate-fade-in">
+    <!-- TABLA -->
+    <div class="bg-gray-900 rounded-xl shadow-xl p-6 ring-1 ring-violet-800">
+      <h2 class="text-2xl font-bold mb-4 text-violet-400">Servicios Existentes</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-700">
+          <thead class="bg-violet-700 text-white">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-semibold">Imagen</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold">Nombre</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold">Descripción</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold">Costo</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold">Categoría</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-700 bg-gray-800">
+            <tr v-for="s in serviciosPaginados" :key="s._id" class="hover:bg-violet-800 transition">
+              <template v-if="modoEdicion === s._id">
+                <td class="px-4 py-2"><input type="file" @change="e => (s.imagen = e.target.files[0])" /></td>
+                <td class="px-4 py-2"><input v-model="s.nombre" class="input-dark" /></td>
+                <td class="px-4 py-2"><textarea v-model="s.descripcion" class="input-dark" /></td>
+                <td class="px-4 py-2"><input v-model="s.costo" type="number" class="input-dark" /></td>
+                <td class="px-4 py-2">
+                  <select v-model="s.categoria" class="input-dark">
+                    <option value="" disabled>— Selecciona —</option>
+                    <option v-for="c in categorias" :key="c.value" :value="c.value">{{ c.label }}</option>
+                  </select>
+                </td>
+                <td class="px-4 py-2 text-center space-x-2">
+                  <button @click="updateService(s)" class="btn-green">Guardar</button>
+                  <button @click="modoEdicion = null" class="btn-gray">Cancelar</button>
+                </td>
+              </template>
+              <template v-else>
+                <td class="px-4 py-2"><img :src="getImg(s.imagen)" class="h-12 w-12 rounded object-cover" /></td>
+                <td class="px-4 py-2">{{ s.nombre }}</td>
+                <td class="px-4 py-2">{{ s.descripcion }}</td>
+                <td class="px-4 py-2">${{ s.costo }}</td>
+                <td class="px-4 py-2 capitalize">{{ categorias.find(c => c.value === s.categoria)?.label }}</td>
+                <td class="px-4 py-2 text-center space-x-2">
+                  <button @click="modoEdicion = s._id" class="text-violet-300 hover:text-white">Editar</button>
+                  <button @click="deleteService(s._id)" class="text-red-400 hover:text-red-200">Eliminar</button>
+                </td>
+              </template>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
     <!-- Paginación -->
-    <div v-if="totalPaginas > 1" class="flex justify-center items-center gap-3 mt-4">
-      <button @click="paginaActual--" :disabled="paginaActual === 1"
-              class="rounded px-4 py-1 bg-violet-600 text-white disabled:opacity-50 hover:bg-violet-700">
-        Anterior
-      </button>
-      <span class="font-medium text-violet-800">{{ paginaActual }} / {{ totalPaginas }}</span>
-      <button @click="paginaActual++" :disabled="paginaActual === totalPaginas"
-              class="rounded px-4 py-1 bg-violet-600 text-white disabled:opacity-50 hover:bg-violet-700">
-        Siguiente
-      </button>
+    <div v-if="totalPaginas > 1" class="flex justify-center gap-4">
+      <button @click="paginaActual--" :disabled="paginaActual === 1" class="btn-violet">Anterior</button>
+      <span class="text-white">{{ paginaActual }} / {{ totalPaginas }}</span>
+      <button @click="paginaActual++" :disabled="paginaActual === totalPaginas" class="btn-violet">Siguiente</button>
     </div>
 
     <!-- Botón Crear -->
-    <div v-if="!mostrarFormulario" class="text-center">
-      <button @click="mostrarFormulario = true"
-              class="rounded-xl bg-violet-600 px-6 py-3 text-white font-semibold shadow hover:bg-violet-700">
-        Crear Servicio
-      </button>
+    <div v-if="!mostrarFormulario" class="flex justify-center">
+      <button @click="mostrarFormulario = true" class="btn-violet px-6 py-3">Agregar Servicio</button>
     </div>
 
     <!-- Formulario Crear -->
-    <div v-else class="rounded-xl bg-white p-6 shadow-xl border border-gray-200">
-      <h3 class="mb-4 text-xl font-bold text-violet-700">Crear nuevo servicio</h3>
-      <div class="grid gap-6 md:grid-cols-2">
-        <div class="space-y-4">
-          <input v-model="nuevoServicio.nombre" placeholder="Nombre"
-                 class="w-full rounded border p-2 focus:outline-none focus:ring-2 focus:ring-violet-400" />
-          <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción"
-                    class="w-full rounded border p-2 focus:outline-none focus:ring-2 focus:ring-violet-400" />
-          <input v-model="nuevoServicio.costo" type="number" placeholder="Costo"
-                 class="w-full rounded border p-2 focus:outline-none focus:ring-2 focus:ring-violet-400" />
-          <select v-model="nuevoServicio.categoria"
-                  class="w-full rounded border p-2 focus:outline-none focus:ring-2 focus:ring-violet-400">
-            <option value="" disabled>— Selecciona —</option>
-            <option v-for="c in categorias" :key="c.value" :value="c.value">{{ c.label }}</option>
+    <div v-if="mostrarFormulario" class="bg-gray-900 text-white p-6 rounded-lg shadow-xl max-w-2xl mx-auto animate-fade-in ring-1 ring-violet-700">
+      <h3 class="text-2xl font-semibold mb-4">{{ nuevoServicio.nombre ? 'Editar' : 'Agregar nuevo' }} Servicio</h3>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="space-y-3">
+          <input v-model="nuevoServicio.nombre" placeholder="Nombre" class="input-dark" />
+          <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción" class="input-dark" />
+          <input v-model="nuevoServicio.costo" type="number" placeholder="Costo" class="input-dark" />
+          <select v-model="nuevoServicio.categoria" class="input-dark">
+            <option disabled value="">— Selecciona —</option>
+            <option v-for="cat in categorias" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
           </select>
         </div>
         <div class="space-y-4">
-          <div class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center">
-            <input id="img-input" type="file" @change="handleImagen" accept="image/*" class="hidden" />
-            <label for="img-input" class="cursor-pointer text-violet-600 hover:text-violet-800 font-medium">
+          <div class="border border-dashed border-violet-400 rounded-lg p-4 text-center">
+            <input id="img-svc" type="file" class="hidden" @change="handleImagen" />
+            <label for="img-svc" class="cursor-pointer text-violet-400 hover:text-violet-200">
               {{ imagenPreview ? 'Cambiar imagen' : 'Seleccionar imagen' }}
             </label>
-            <img v-if="imagenPreview" :src="imagenPreview" class="mx-auto mt-2 max-h-48 rounded shadow-md" />
+            <img v-if="imagenPreview" :src="imagenPreview" class="mt-3 h-40 mx-auto object-cover rounded shadow" />
           </div>
-          <button @click="createService"
-                  class="w-full rounded bg-violet-600 py-2 font-semibold text-white hover:bg-violet-700">
-            Crear
-          </button>
-          <button @click="mostrarFormulario = false"
-                  class="w-full rounded bg-gray-300 py-2 font-semibold text-gray-800 hover:bg-gray-400">
-            Cancelar
-          </button>
+          <button @click="createService" class="btn-violet w-full">Crear</button>
+          <button @click="mostrarFormulario = false" class="btn-gray w-full">Cancelar</button>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.input-dark {
+  @apply block w-full rounded-md bg-gray-800 text-white border border-gray-600 p-2 focus:ring-violet-500 focus:border-violet-500;
+}
+.btn-violet {
+  @apply px-4 py-2 rounded bg-violet-600 text-white hover:bg-violet-700 transition disabled:opacity-50;
+}
+.btn-gray {
+  @apply px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700 transition;
+}
+.btn-green {
+  @apply px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition;
+}
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+</style>
+
 
