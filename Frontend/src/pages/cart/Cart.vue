@@ -5,7 +5,7 @@ import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
 import { cartState, fetchCartData, updateCartItem, removeCartItem } from '@/utils/cartStore'
 import { RouterLink, useRouter } from 'vue-router'
-import { getImageUrl, getTechnologyImageUrl } from '../utils/imageUtils'
+import { getImageUrl as baseImageUrl, getTechnologyImageUrl } from '../utils/imageUtils'
 
 const usuario = ref(null)
 const hoveredServiceId = ref(null)
@@ -43,14 +43,14 @@ const irAlCheckout = () => {
   router.push('/checkout')
 }
 
+// Evita recursión y usa el import base
 const getImageUrl = (imagePath) => {
   if (imagePath.includes('technologies')) {
-    return getTechnologyImageUrl(imagePath);
+    return getTechnologyImageUrl(imagePath)
   }
-  return getImageUrl(imagePath);
+  return baseImageUrl(imagePath)
 }
 
-// Corrección del cálculo
 const subtotal = computed(() => cartState.total)
 const impuestos = computed(() => +(subtotal.value * 0.13).toFixed(2))
 const totalFinal = computed(() => +(subtotal.value + impuestos.value).toFixed(2))
