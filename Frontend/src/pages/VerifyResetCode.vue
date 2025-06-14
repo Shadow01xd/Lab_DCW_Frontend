@@ -1,118 +1,154 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import Header from '@/components/layout/Header.vue'
+import Footer from '@/components/layout/Footer.vue'
 
-const email = ref('')
-const code = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
+const router = useRouter()
+const route = useRoute()
+const codigo = ref('')
 const mensaje = ref('')
 const error = ref('')
 const cargando = ref(false)
+const email = ref('')
 
-const API_URL = import.meta.env.VITE_API_URL
-const route = useRoute()
-const router = useRouter()
-
-onMounted(() => {
-  const emailParam = route.query.email
-  if (!emailParam) {
-    error.value = 'No se proporcionó el correo electrónico.'
-    return
-  }
-  email.value = emailParam
+// Validación del código
+const codigoValido = computed(() => {
+  return codigo.value.length === 6 && /^\d+$/.test(codigo.value)
 })
 
-const verificarCodigoYRestablecer = async () => {
-  cargando.value = true
-  mensaje.value = ''
-  error.value = ''
+const formularioValido = computed(() => {
+  return codigoValido.value
+})
 
-  if (newPassword.value !== confirmPassword.value) {
-    error.value = 'Las contraseñas no coinciden.'
-    cargando.value = false
-    return
+const validarFormulario = () => {
+  if (!codigoValido.value) {
+    error.value = 'El código debe ser de 6 dígitos'
+    return false
   }
+  return true
+}
 
-  if (newPassword.value.length < 6) {
-    error.value = 'La contraseña debe tener al menos 6 caracteres.'
-    cargando.value = false
-    return
-  }
+const verificarCodigo = async () => {
+  if (!validarFormulario()) return
 
   try {
-    const response = await fetch(`${API_URL}/auth/resetpassword`, {
-      method: 'PUT',
+    cargando.value = true
+    error.value = ''
+    mensaje.value = ''
+
+    const response = await fetch('https://laboratorio-dcw-production.up.railway.app/api/auth/verify-reset-code', {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         email: email.value,
-        code: code.value,
-        newPassword: newPassword.value
+        code: codigo.value
       })
     })
 
+    const data = await response.json()
+
     if (!response.ok) {
-      const respText = await response.text()
-      console.error('❌ Respuesta inesperada:', respText)
-      throw new Error(`Error ${response.status}: ${respText}`)
+      throw new Error(data.message || 'Error al verificar el código')
     }
 
-    const data = await response.json()
-    mensaje.value = data.message || 'Contraseña restablecida correctamente.'
-
+    mensaje.value = 'Código verificado correctamente'
+    
+    // Redirigir a la página de restablecimiento de contraseña
     setTimeout(() => {
-      router.push('/login')
-    }, 3000)
-
+      router.push({
+        path: '/reset-password',
+        query: { token: data.token }
+      })
+    }, 1500)
   } catch (err) {
-    console.error('❌ Error al restablecer contraseña:', err)
-    error.value = err.message || 'Ocurrió un error inesperado.'
+    console.error('Error:', err)
+    error.value = err.message || 'Error al verificar el código'
   } finally {
     cargando.value = false
   }
 }
+
+onMounted(() => {
+  email.value = route.query.email
+  if (!email.value) {
+    error.value = 'Email no proporcionado'
+    setTimeout(() => {
+      router.push('/forgot-password')
+    }, 2000)
+  }
+})
 </script>
 
-
-
 <template>
-  <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-rose-100">
-    <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-      <h2 class="text-2xl font-bold text-center text-violet-600 mb-6">Verificar Código y Restablecer</h2>
-      <p class="text-center text-gray-600 mb-6">Ingresa el código de verificación y tu nueva contraseña.</p>
+  <Header />
+  <div class="min-h-screen flex items-center justify-center py-12 px-4">
+    <div class="max-w-md w-full p-8 bg-white rounded-xl shadow-lg border border-gray-200">
+      <h2 class="text-3xl font-extrabold text-violet-700 text-center mb-8">Verificar Código</h2>
+      
+      <form @submit.prevent="verificarCodigo" class="space-y-6">
+        <div>
+          <label for="codigo" class="block text-sm font-medium text-gray-700 mb-2">Código de Verificación</label>
+          <input 
+            id="codigo"
+            v-model="codigo"
+            type="text"
+            maxlength="6"
+            class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200 text-center text-2xl tracking-widest"
+            :class="{
+              'border-gray-300': !codigo || codigoValido,
+              'border-red-500': codigo && !codigoValido
+            }"
+            required
+            placeholder="000000"
+            pattern="\d*"
+            inputmode="numeric"
+          >
+          <p v-if="codigo && !codigoValido" class="mt-1 text-sm text-red-600">
+            El código debe ser de 6 dígitos
+          </p>
+          <p class="mt-2 text-sm text-gray-600">
+            Ingresa el código de 6 dígitos que enviamos a tu correo electrónico
+          </p>
+        </div>
 
-      <form @submit.prevent="verificarCodigoYRestablecer" class="space-y-4">
-        <input v-model="email" type="email" placeholder="Correo electrónico"
-               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-               required :disabled="true" /> <!-- Email precargado y deshabilitado -->
-        
-        <input v-model="code" type="text" placeholder="Código de Verificación"
-               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-               required maxlength="6" />
+        <div v-if="mensaje" class="text-green-700 bg-green-100 p-3 rounded-lg font-medium border border-green-200">
+          {{ mensaje }}
+        </div>
+        <div v-if="error" class="text-red-700 bg-red-100 p-3 rounded-lg font-medium border border-red-200">
+          {{ error }}
+        </div>
 
-        <input v-model="newPassword" type="password" placeholder="Nueva Contraseña"
-               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-               required />
-        <input v-model="confirmPassword" type="password" placeholder="Confirmar Contraseña"
-               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-               required />
-        
-        <p v-if="error" class="text-red-600 text-sm text-center">{{ error }}</p>
-        <p v-if="mensaje" class="text-green-600 text-sm text-center">{{ mensaje }}</p>
-
-        <button type="submit" class="bg-violet-600 text-white p-3 rounded w-full"
-                :disabled="cargando">
-          {{ cargando ? 'Verificando...' : 'Restablecer Contraseña' }}
+        <button 
+          type="submit"
+          class="w-full bg-violet-600 text-white py-3 rounded-lg hover:bg-violet-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
+          :disabled="cargando || !formularioValido"
+        >
+          {{ cargando ? 'Verificando...' : 'Verificar Código' }}
         </button>
-      </form>
 
-      <p class="text-center text-sm text-gray-600 mt-4">
-        <router-link to="/login" class="text-violet-600 hover:underline font-semibold">
-          Volver al inicio de sesión
-        </router-link>
-      </p>
+        <div class="text-center space-y-4">
+          <p class="text-sm text-gray-600">
+            ¿No recibiste el código?
+            <button 
+              type="button"
+              class="text-violet-600 hover:text-violet-700 font-medium"
+              @click="router.push('/forgot-password')"
+            >
+              Solicitar uno nuevo
+            </button>
+          </p>
+          <router-link 
+            to="/login" 
+            class="text-violet-600 hover:text-violet-700 font-medium block"
+          >
+            Volver al inicio de sesión
+          </router-link>
+        </div>
+      </form>
     </div>
-  </section>
+  </div>
+  <Footer />
 </template> 

@@ -1,13 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { obtenerUsuario } from '@/utils/auth'
+import { ref, onMounted, computed } from 'vue'
+import { obtenerUsuario, guardarSesion } from '@/utils/auth'
 import { useRouter } from 'vue-router'
 import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
 
-const API_URL = import.meta.env.VITE_API_URL
 const router = useRouter()
-
 const usuario = ref({
   nombre: '',
   email: '',
@@ -19,82 +17,105 @@ const mensaje = ref('')
 const error = ref('')
 const cargando = ref(false)
 
+// Validación de campos
+const validaciones = computed(() => ({
+  nombre: usuario.value.nombre.length >= 2,
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(usuario.value.email),
+  password: !usuario.value.password || usuario.value.password.length >= 6,
+  passwordsCoinciden: !usuario.value.password || usuario.value.password === usuario.value.confirmPassword
+}))
+
+const formularioValido = computed(() => {
+  return validaciones.value.nombre && 
+         validaciones.value.email && 
+         validaciones.value.password && 
+         validaciones.value.passwordsCoinciden
+})
+
 onMounted(() => {
   const usuarioActual = obtenerUsuario()
   if (usuarioActual) {
-    usuario.value.nombre = usuarioActual.nombre || ''
-    usuario.value.email = usuarioActual.email || ''
+    usuario.value = { 
+      ...usuarioActual,
+      password: '',
+      confirmPassword: ''
+    }
+  } else {
+    router.push('/login')
   }
 })
 
-const guardarCambios = async () => {
-  cargando.value = true
-  mensaje.value = ''
-  error.value = ''
-
-  if (usuario.value.password && usuario.value.password !== usuario.value.confirmPassword) {
-    error.value = 'Las contraseñas no coinciden.'
-    cargando.value = false
-    return
+const validarFormulario = () => {
+  if (!validaciones.value.nombre) {
+    error.value = 'El nombre debe tener al menos 2 caracteres'
+    return false
   }
+  if (!validaciones.value.email) {
+    error.value = 'Ingresa un email válido'
+    return false
+  }
+  if (usuario.value.password && !validaciones.value.password) {
+    error.value = 'La contraseña debe tener al menos 6 caracteres'
+    return false
+  }
+  if (usuario.value.password && !validaciones.value.passwordsCoinciden) {
+    error.value = 'Las contraseñas no coinciden'
+    return false
+  }
+  return true
+}
+
+const guardarCambios = async () => {
+  if (!validarFormulario()) return
 
   try {
+    cargando.value = true
+    error.value = ''
+    mensaje.value = ''
+
     const token = localStorage.getItem('token')
-    if (!token) throw new Error('No hay sesión activa.')
-
-    const payload = {
-      nombre: usuario.value.nombre,
-      email: usuario.value.email
+    if (!token) {
+      throw new Error('No hay sesión activa')
     }
 
-    if (usuario.value.password) {
-      if (usuario.value.password.length < 6) {
-        error.value = 'La contraseña debe tener al menos 6 caracteres.'
-        cargando.value = false
-        return
-      }
-      payload.password = usuario.value.password
-    }
-
-    const res = await fetch(`${API_URL}/usuarios/update-profile`, {
+    const response = await fetch('https://laboratorio-dcw-production.up.railway.app/api/usuarios/update-profile', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        nombre: usuario.value.nombre,
+        email: usuario.value.email,
+        password: usuario.value.password || undefined
+      })
     })
 
-    const data = await res.json()
-
-    if (!res.ok) throw new Error(data.message || 'Error al actualizar perfil.')
-
-    // Limpiar campos de contraseña
-    usuario.value.password = ''
-    usuario.value.confirmPassword = ''
-
-    // Guardar en localStorage solo nombre e email
-    const usuarioActualizado = {
-      nombre: data.nombre,
-      email: data.email,
-      rol: data.rol || 'cliente'
+    if (!response.ok) {
+      const data = await response.json()
+      throw new Error(data.message || 'Error al actualizar el perfil')
     }
-    localStorage.setItem('usuario', JSON.stringify(usuarioActualizado))
 
-    mensaje.value = 'Perfil actualizado correctamente.'
+    const data = await response.json()
+
+    // Actualizar el usuario en localStorage
+    const usuarioActualizado = { ...data }
+    delete usuarioActualizado.password
+    delete usuarioActualizado.confirmPassword
+    guardarSesion(token, usuarioActualizado)
+
+    mensaje.value = 'Perfil actualizado correctamente'
     setTimeout(() => {
       router.push('/')
     }, 2000)
-
   } catch (err) {
-    console.error('[❌] Error al actualizar perfil:', err)
-    error.value = err.message || 'Error inesperado.'
+    console.error('Error:', err)
+    error.value = err.message || 'Error al actualizar el perfil'
   } finally {
     cargando.value = false
   }
 }
 </script>
-
 
 <template>
   <Header />
@@ -109,9 +130,16 @@ const guardarCambios = async () => {
             id="nombre"
             v-model="usuario.nombre"
             type="text"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200"
+            class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200"
+            :class="{
+              'border-gray-300': !usuario.nombre || validaciones.nombre,
+              'border-red-500': usuario.nombre && !validaciones.nombre
+            }"
             required
           >
+          <p v-if="usuario.nombre && !validaciones.nombre" class="mt-1 text-sm text-red-600">
+            El nombre debe tener al menos 2 caracteres
+          </p>
         </div>
 
         <div>
@@ -120,9 +148,16 @@ const guardarCambios = async () => {
             id="email"
             v-model="usuario.email"
             type="email"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200"
+            class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200"
+            :class="{
+              'border-gray-300': !usuario.email || validaciones.email,
+              'border-red-500': usuario.email && !validaciones.email
+            }"
             required
           >
+          <p v-if="usuario.email && !validaciones.email" class="mt-1 text-sm text-red-600">
+            Ingresa un email válido
+          </p>
         </div>
 
         <div class="border-t border-gray-200 pt-6 mt-6">
@@ -134,10 +169,17 @@ const guardarCambios = async () => {
                 id="new-password"
                 v-model="usuario.password"
                 type="password"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200"
+                class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200"
+                :class="{
+                  'border-gray-300': !usuario.password || validaciones.password,
+                  'border-red-500': usuario.password && !validaciones.password
+                }"
                 minlength="6"
                 autocomplete="new-password"
               >
+              <p v-if="usuario.password && !validaciones.password" class="mt-1 text-sm text-red-600">
+                La contraseña debe tener al menos 6 caracteres
+              </p>
             </div>
 
             <div>
@@ -146,10 +188,17 @@ const guardarCambios = async () => {
                 id="confirm-password"
                 v-model="usuario.confirmPassword"
                 type="password"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200"
+                class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200"
+                :class="{
+                  'border-gray-300': !usuario.confirmPassword || validaciones.passwordsCoinciden,
+                  'border-red-500': usuario.confirmPassword && !validaciones.passwordsCoinciden
+                }"
                 minlength="6"
                 autocomplete="new-password"
               >
+              <p v-if="usuario.confirmPassword && !validaciones.passwordsCoinciden" class="mt-1 text-sm text-red-600">
+                Las contraseñas no coinciden
+              </p>
             </div>
           </div>
         </div>
@@ -164,7 +213,7 @@ const guardarCambios = async () => {
         <button 
           type="submit"
           class="w-full bg-violet-600 text-white py-3 rounded-lg hover:bg-violet-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
-          :disabled="cargando"
+          :disabled="cargando || !formularioValido"
         >
           {{ cargando ? 'Guardando...' : 'Guardar Cambios' }}
         </button>

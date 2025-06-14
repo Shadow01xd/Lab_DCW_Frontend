@@ -1,9 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 
-// URL base (puedes reemplazar con import.meta.env.VITE_API_URL si usas env vars)
-const API_URL = 'https://laboratoriodcw-production.up.railway.app'
-
 // Campos del formulario
 const nombre = ref('')
 const email = ref('')
@@ -48,7 +45,7 @@ const validarFormulario = () => {
   if (!telefono.value.trim()) {
     errores.value.telefono = 'El teléfono es obligatorio.'
     valido = false
-  } else if (!/^\d{8,}$/.test(telefono.value.trim())) {
+  } else if (!/^\d{8,}$/.test(telefono.value)) {
     errores.value.telefono = 'El teléfono debe tener al menos 8 dígitos numéricos.'
     valido = false
   }
@@ -69,54 +66,45 @@ const enviarFormulario = async () => {
   error.value = ''
 
   try {
-    const response = await fetch(`${API_URL}/api/consultas`, {
+    const response = await fetch('https://laboratorio-dcw-production.up.railway.app', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        nombre: nombre.value.trim(),
-        email: email.value.trim(),
-        telefono: telefono.value.trim(),
-        mensaje: mensaje.value.trim()
+        nombre: nombre.value,
+        email: email.value,
+        telefono: telefono.value,
+        mensaje: mensaje.value
       })
     })
 
     if (!response.ok) {
-      const err = await response.json()
-      throw new Error(err.message || 'Error al enviar la consulta')
+      const error = await response.json()
+      throw new Error(error.message || 'Error al enviar la consulta')
     }
 
-    await response.json()
+    const data = await response.json()
     formularioEnviado.value = true
-
+    
     // Limpiar campos
     nombre.value = ''
     email.value = ''
     telefono.value = ''
     mensaje.value = ''
 
-    // Reset errores
-    errores.value = {
-      nombre: '',
-      email: '',
-      telefono: '',
-      mensaje: ''
-    }
-
+    // Ocultar mensaje de "¡Enviado!" después de 5 segundos
     setTimeout(() => {
       formularioEnviado.value = false
     }, 5000)
-
-  } catch (e) {
-    console.error('Error al enviar la consulta:', e)
-    error.value = e.message || 'Error al enviar la consulta. Por favor, intente nuevamente.'
+  } catch (error) {
+    console.error('Error al enviar la consulta:', error)
+    error.value = error.message || 'Error al enviar la consulta. Por favor, intente nuevamente.'
   } finally {
     cargando.value = false
   }
 }
 </script>
-
 
 <template>
   <section id="consultas" class="py-24 bg-white border-gray-200">

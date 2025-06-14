@@ -9,31 +9,31 @@ import icon6 from '@/assets/icon/e-commerce.png'
 import ServiceCardAuthenticated from './ServiceCardAuthenticated.vue'
 import ServiceDetailModal from './ServiceDetailModal.vue'
 
-const API_URL = import.meta.env.VITE_API_URL
-
+// Función para obtener el token de autenticación
 function obtenerToken() {
   return localStorage.getItem('token')
 }
 
-const filtro = ref('')
+const filtro = ref('') 
 const serviciosDB = ref([])
 const cargando = ref(false)
 const error = ref('')
 const successMessage = ref('')
 const errorMessage = ref('')
+
+// Estado para el modal
 const showModal = ref(false)
 const selectedService = ref(null)
 
+// array de los servicios estáticos
 const serviciosEstaticos = [
-  { id: 1, titulo: 'Diseño Web', descripcion: 'Diseñamos sitios web modernos y funcionales...', icono: icon1 },
-  { id: 2, titulo: 'Desarrollo a Medida', descripcion: 'Construimos soluciones personalizadas...', icono: icon2 },
-  { id: 3, titulo: 'Optimización SEO', descripcion: 'Mejoramos la visibilidad de tu sitio...', icono: icon3 },
-  { id: 4, titulo: 'Mantenimiento', descripcion: 'Brindamos soporte continuo...', icono: icon4 },
-  { id: 5, titulo: 'Marketing Digital', descripcion: 'Implementamos estrategias avanzadas...', icono: icon5 },
-  { id: 6, titulo: 'E-commerce', descripcion: 'Desarrollamos plataformas de comercio...', icono: icon6 }
+  { id: 1, titulo: 'Diseño Web', descripcion: 'Diseñamos sitios web modernos y funcionales que representan la esencia de tu negocio.', icono: icon1 },
+  { id: 2, titulo: 'Desarrollo a Medida', descripcion: 'Construimos soluciones personalizadas adaptadas a las necesidades de cada cliente.', icono: icon2 },
+  { id: 3, titulo: 'Optimización SEO', descripcion: 'Mejoramos la visibilidad de tu sitio en los motores de búsqueda para aumentar el tráfico.', icono: icon3 },
+  { id: 4, titulo: 'Mantenimiento', descripcion: 'Brindamos soporte continuo para garantizar que tu sitio funcione sin problemas.', icono: icon4 },
+  { id: 5, titulo: 'Marketing Digital', descripcion: 'Implementamos estrategias avanzadas de marketing para aumentar la conversión y visibilidad.', icono: icon5 },
+  { id: 6, titulo: 'E-commerce', descripcion: 'Desarrollamos plataformas de comercio electrónico personalizadas para maximizar tus ventas.', icono: icon6 }
 ]
-
-const estaAutenticado = computed(() => !!obtenerToken())
 
 const serviciosFiltrados = computed(() => {
   if (estaAutenticado.value) {
@@ -43,6 +43,10 @@ const serviciosFiltrados = computed(() => {
   }
 })
 
+// Saber si el usuario está autenticado
+const estaAutenticado = computed(() => !!obtenerToken())
+
+// Funciones para el modal
 const openModal = (service) => {
   selectedService.value = service
   showModal.value = true
@@ -63,19 +67,20 @@ const addToCart = async (serviceData) => {
       return
     }
 
+    // Extraer los datos necesarios del objeto serviceData
     const { _id: servicioId, tecnologiasSeleccionadas, precioTotal } = serviceData
 
-    const response = await fetch(`${API_URL}/carrito`, {
+    const response = await fetch('https://laboratorio-dcw-production.up.railway.app/api/carrito', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        servicioId,
-        cantidad: 1,
-        tecnologiasSeleccionadas,
-        precioTotal
+        servicioId: servicioId,
+        cantidad: 1, // Asumiendo que la cantidad es 1
+        tecnologiasSeleccionadas: tecnologiasSeleccionadas,
+        precioTotal: precioTotal
       })
     })
 
@@ -86,44 +91,54 @@ const addToCart = async (serviceData) => {
 
     const data = await response.json()
     successMessage.value = data.message || 'Servicio agregado al carrito con éxito!'
-
+    // Importar y usar el cartStore para actualizar el carrito
     const cartStore = await import('@/utils/cartStore')
-    cartStore.fetchCartData()
-    closeModal()
+    cartStore.fetchCartData() // Recargar los datos del carrito
+    closeModal() // Cerrar el modal después de agregar al carrito
 
-    setTimeout(() => { successMessage.value = '' }, 3000)
+    setTimeout(() => {
+      successMessage.value = ''
+    }, 3000) // Ocultar mensaje después de 3 segundos
+
   } catch (error) {
     errorMessage.value = error.message
     console.error('Error al agregar al carrito:', error)
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    setTimeout(() => {
+      errorMessage.value = ''
+    }, 5000) // Ocultar mensaje de error después de 5 segundos
   }
 }
 
 const fetchServices = async () => {
   try {
-    cargando.value = true
     const token = obtenerToken()
     if (!token) {
       error.value = 'No estás autenticado para ver los servicios de la base de datos.'
       return
     }
-    const response = await fetch(`${API_URL}/servicios`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const response = await fetch('https://laboratorio-dcw-production.up.railway.app/api/servicios', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     })
-    if (!response.ok) throw new Error('Error al obtener servicios')
-    serviciosDB.value = await response.json()
-  } catch (e) {
-    error.value = e.message
-  } finally {
-    cargando.value = false
+
+    if (!response.ok) {
+      throw new Error('Error al obtener servicios')
+    }
+
+    const data = await response.json()
+    serviciosDB.value = data
+  } catch (error) {
+    console.error('Error:', error)
   }
 }
 
 onMounted(() => {
-  if (estaAutenticado.value) fetchServices()
+  if (estaAutenticado.value) {
+    fetchServices()
+  }
 })
 </script>
-
 
 <template>
   <section id="servicios" class="py-24 bg-white">

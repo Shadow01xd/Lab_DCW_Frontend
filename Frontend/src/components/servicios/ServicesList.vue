@@ -1,52 +1,15 @@
-<script setup>
-import { ref, onMounted } from 'vue'
-
-const API_URL = import.meta.env.VITE_API_URL
-
-const services = ref([])
-const loading = ref(true)
-const error = ref(null)
-
-const fetchServices = async () => {
-  try {
-    const response = await fetch(`${API_URL}/servicios`)
-    if (!response.ok) {
-      throw new Error('Error en la respuesta del servidor')
-    }
-    const data = await response.json()
-    services.value = data
-  } catch (err) {
-    error.value = 'Error al cargar los servicios. Por favor, intente nuevamente.'
-    console.error('Error fetching services:', err)
-  } finally {
-    loading.value = false
-  }
-}
-
-const getImageUrl = (imgPath) => {
-  return imgPath.startsWith('http') ? imgPath : `${API_URL}${imgPath}`
-}
-
-onMounted(() => {
-  fetchServices()
-})
-</script>
-
 <template>
   <div class="services-container">
     <h2>Nuestros Servicios</h2>
-
     <div v-if="loading" class="loading">
       Cargando servicios...
     </div>
-
     <div v-else-if="error" class="error">
       {{ error }}
     </div>
-
     <div v-else class="services-grid">
       <div v-for="service in services" :key="service._id" class="service-card">
-        <img :src="getImageUrl(service.imagen)" :alt="service.nombre" class="service-image" />
+        <img :src="service.imagen" :alt="service.nombre" class="service-image">
         <div class="service-info">
           <h3>{{ service.nombre }}</h3>
           <p>{{ service.descripcion }}</p>
@@ -57,6 +20,45 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<script>
+import { ref, onMounted } from 'vue'
+
+export default {
+  name: 'ServicesList',
+  setup() {
+    const services = ref([])
+    const loading = ref(true)
+    const error = ref(null)
+
+    const fetchServices = async () => {
+      try {
+        const response = await fetch('https://laboratorio-dcw-production.up.railway.app')
+        if (!response.ok) {
+          throw new Error('Error en la respuesta del servidor')
+        }
+        const data = await response.json()
+        services.value = data
+        loading.value = false
+      } catch (err) {
+        error.value = 'Error al cargar los servicios. Por favor, intente nuevamente.'
+        loading.value = false
+        console.error('Error fetching services:', err)
+      }
+    }
+
+    onMounted(() => {
+      fetchServices()
+    })
+
+    return {
+      services,
+      loading,
+      error
+    }
+  }
+}
+</script>
 
 <style scoped>
 .services-container {
@@ -78,7 +80,7 @@ onMounted(() => {
   overflow: hidden;
   transition: transform 0.3s ease;
   background: white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .service-card:hover {
@@ -131,4 +133,4 @@ onMounted(() => {
   padding: 2rem;
   color: #dc3545;
 }
-</style>
+</style> 

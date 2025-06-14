@@ -1,115 +1,166 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import Header from '@/components/layout/Header.vue'
+import Footer from '@/components/layout/Footer.vue'
 
+const router = useRouter()
+const route = useRoute()
 const password = ref('')
 const confirmPassword = ref('')
 const mensaje = ref('')
 const error = ref('')
 const cargando = ref(false)
-const token = ref('')
 
-const API_URL = import.meta.env.VITE_API_URL
-const route = useRoute()
-const router = useRouter()
+// Validación de campos
+const validaciones = computed(() => ({
+  password: password.value.length >= 6,
+  passwordsCoinciden: password.value === confirmPassword.value
+}))
 
-onMounted(() => {
-  token.value = route.params.resettoken || ''
-  if (!token.value) {
-    error.value = 'Token de restablecimiento no encontrado en la URL.'
-  }
+const formularioValido = computed(() => {
+  return validaciones.value.password && validaciones.value.passwordsCoinciden
 })
 
-const resetearContrasena = async () => {
-  mensaje.value = ''
-  error.value = ''
-
-  if (!token.value) {
-    error.value = 'Token inválido. No se puede continuar.'
-    return
+const validarFormulario = () => {
+  if (!validaciones.value.password) {
+    error.value = 'La contraseña debe tener al menos 6 caracteres'
+    return false
   }
-
-  if (password.value !== confirmPassword.value) {
-    error.value = 'Las contraseñas no coinciden.'
-    return
+  if (!validaciones.value.passwordsCoinciden) {
+    error.value = 'Las contraseñas no coinciden'
+    return false
   }
+  return true
+}
 
-  if (password.value.length < 6) {
-    error.value = 'La contraseña debe tener al menos 6 caracteres.'
-    return
-  }
-
-  cargando.value = true
+const restablecerPassword = async () => {
+  if (!validarFormulario()) return
 
   try {
-    const response = await fetch(`${API_URL}/auth/resetpassword/${token.value}`, {
-      method: 'PUT',
+    cargando.value = true
+    error.value = ''
+    mensaje.value = ''
+
+    const token = route.query.token
+    if (!token) {
+      throw new Error('Token de restablecimiento no válido')
+    }
+
+    const response = await fetch('https://laboratorio-dcw-production.up.railway.app/api/auth/reset-password', {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ newPassword: password.value })
+      body: JSON.stringify({
+        token,
+        password: password.value
+      })
     })
 
     const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.message || 'Error al restablecer la contraseña.')
+      throw new Error(data.message || 'Error al restablecer la contraseña')
     }
 
-    mensaje.value = data.message || 'Contraseña restablecida correctamente.'
-
+    mensaje.value = 'Contraseña restablecida correctamente'
+    
+    // Redirigir al login después de 2 segundos
     setTimeout(() => {
       router.push('/login')
-    }, 3000)
+    }, 2000)
   } catch (err) {
-    console.error('❌ Error al restablecer contraseña:', err)
-    error.value = err.message || 'Ocurrió un error inesperado.'
+    console.error('Error:', err)
+    error.value = err.message || 'Error al restablecer la contraseña'
   } finally {
     cargando.value = false
   }
 }
+
+onMounted(() => {
+  const token = route.query.token
+  if (!token) {
+    error.value = 'Token de restablecimiento no válido'
+    setTimeout(() => {
+      router.push('/login')
+    }, 2000)
+  }
+})
 </script>
 
 <template>
-  <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-rose-100">
-    <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-      <h2 class="text-2xl font-bold text-center text-violet-600 mb-6">Restablecer Contraseña</h2>
-      <p class="text-center text-gray-600 mb-6">Ingresa tu nueva contraseña.</p>
+  <Header />
+  <div class="min-h-screen flex items-center justify-center py-12 px-4">
+    <div class="max-w-md w-full p-8 bg-white rounded-xl shadow-lg border border-gray-200">
+      <h2 class="text-3xl font-extrabold text-violet-700 text-center mb-8">Restablecer Contraseña</h2>
+      
+      <form @submit.prevent="restablecerPassword" class="space-y-6">
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Nueva Contraseña</label>
+          <input 
+            id="password"
+            v-model="password"
+            type="password"
+            class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200"
+            :class="{
+              'border-gray-300': !password || validaciones.password,
+              'border-red-500': password && !validaciones.password
+            }"
+            required
+            minlength="6"
+            placeholder="Ingresa tu nueva contraseña"
+          >
+          <p v-if="password && !validaciones.password" class="mt-1 text-sm text-red-600">
+            La contraseña debe tener al menos 6 caracteres
+          </p>
+        </div>
 
-      <form @submit.prevent="resetearContrasena" class="space-y-4">
-        <input
-          v-model="password"
-          type="password"
-          placeholder="Nueva Contraseña"
-          required
-          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-        />
+        <div>
+          <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
+          <input 
+            id="confirm-password"
+            v-model="confirmPassword"
+            type="password"
+            class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition duration-200"
+            :class="{
+              'border-gray-300': !confirmPassword || validaciones.passwordsCoinciden,
+              'border-red-500': confirmPassword && !validaciones.passwordsCoinciden
+            }"
+            required
+            minlength="6"
+            placeholder="Confirma tu nueva contraseña"
+          >
+          <p v-if="confirmPassword && !validaciones.passwordsCoinciden" class="mt-1 text-sm text-red-600">
+            Las contraseñas no coinciden
+          </p>
+        </div>
 
-        <input
-          v-model="confirmPassword"
-          type="password"
-          placeholder="Confirmar Contraseña"
-          required
-          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-        />
+        <div v-if="mensaje" class="text-green-700 bg-green-100 p-3 rounded-lg font-medium border border-green-200">
+          {{ mensaje }}
+        </div>
+        <div v-if="error" class="text-red-700 bg-red-100 p-3 rounded-lg font-medium border border-red-200">
+          {{ error }}
+        </div>
 
-        <p v-if="error" class="text-red-600 text-sm text-center">{{ error }}</p>
-        <p v-if="mensaje" class="text-green-600 text-sm text-center">{{ mensaje }}</p>
-
-        <button
+        <button 
           type="submit"
-          :disabled="cargando"
-          class="bg-violet-600 hover:bg-violet-700 text-white p-3 rounded w-full transition-colors duration-300"
+          class="w-full bg-violet-600 text-white py-3 rounded-lg hover:bg-violet-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
+          :disabled="cargando || !formularioValido"
         >
-          {{ cargando ? 'Restableciendo...' : 'Restablecer Contraseña' }}
+          {{ cargando ? 'Procesando...' : 'Restablecer Contraseña' }}
         </button>
-      </form>
 
-      <p class="text-center text-sm text-gray-600 mt-4">
-        <router-link to="/login" class="text-violet-600 hover:underline font-semibold">
-          Volver al inicio de sesión
-        </router-link>
-      </p>
+        <div class="text-center">
+          <router-link 
+            to="/login" 
+            class="text-violet-600 hover:text-violet-700 font-medium"
+          >
+            Volver al inicio de sesión
+          </router-link>
+        </div>
+      </form>
     </div>
-  </section>
-</template>
+  </div>
+  <Footer />
+</template> 

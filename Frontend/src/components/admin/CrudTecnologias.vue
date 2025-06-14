@@ -2,8 +2,6 @@
 import { ref, onMounted, computed } from 'vue'
 import { obtenerToken } from '@/utils/auth'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://laboratoriodcw-production.up.railway.app'
-
 const tecnologias = ref([])
 const mostrarFormulario = ref(false)
 const tecnologiaEditando = ref(null)
@@ -34,7 +32,7 @@ const totalPaginas = computed(() => Math.ceil(tecnologias.value.length / porPagi
 
 const fetchTechnologies = async () => {
   try {
-    const response = await fetch(`${API_URL}/api/tecnologias`)
+    const response = await fetch('https://laboratorio-dcw-production.up.railway.app/api/tecnologias')
     if (!response.ok) throw new Error('Error al obtener tecnologías')
     const data = await response.json()
     tecnologias.value = data
@@ -42,7 +40,7 @@ const fetchTechnologies = async () => {
       paginaActual.value = totalPaginas.value || 1
     }
   } catch (error) {
-    console.error('Error:', error.message || error)
+    console.error('Error:', error)
   }
 }
 
@@ -65,8 +63,8 @@ const guardarTecnologia = async () => {
 
     const token = obtenerToken()
     const url = tecnologiaEditando.value
-      ? `${API_URL}/api/tecnologias/${tecnologiaEditando.value._id}`
-      : `${API_URL}/api/tecnologias`
+      ? `https://laboratorio-dcw-production.up.railway.app/api/tecnologias/${tecnologiaEditando.value._id}`
+      : 'https://laboratorio-dcw-production.up.railway.app/api/tecnologias'
     const method = tecnologiaEditando.value ? 'PUT' : 'POST'
 
     const response = await fetch(url, {
@@ -80,7 +78,7 @@ const guardarTecnologia = async () => {
     await fetchTechnologies()
     cerrarFormulario()
   } catch (error) {
-    console.error('Error al guardar tecnología:', error.message || error)
+    console.error('Error al guardar tecnología:', error)
   }
 }
 
@@ -100,14 +98,14 @@ const eliminarTecnologia = async (id) => {
   if (!confirm('¿Eliminar esta tecnología?')) return
   try {
     const token = obtenerToken()
-    const response = await fetch(`${API_URL}/api/tecnologias/${id}`, {
+    const response = await fetch(`https://laboratorio-dcw-production.up.railway.app/api/tecnologias/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     })
     if (!response.ok) throw new Error('Error al eliminar tecnología')
     await fetchTechnologies()
   } catch (error) {
-    console.error('Error al eliminar tecnología:', error.message || error)
+    console.error('Error al eliminar tecnología:', error)
   }
 }
 
@@ -125,7 +123,6 @@ const cerrarFormulario = () => {
 
 onMounted(fetchTechnologies)
 </script>
-
 
 <template>
   <div class="space-y-6">
@@ -147,7 +144,7 @@ onMounted(fetchTechnologies)
           </thead>
           <tbody class="bg-gray-800 divide-y divide-gray-700">
             <tr v-for="tech in tecnologiasPaginadas" :key="tech._id" class="hover:bg-violet-800 transition">
-              <td class="px-6 py-4"><img :src="`http://localhost:5000${tech.image}`" class="h-12 w-12 object-cover rounded" /></td>
+              <td class="px-6 py-4"><img :src="`https://laboratorio-dcw-production.up.railway.app${tech.image}`" class="h-12 w-12 object-cover rounded" /></td>
               <td class="px-6 py-4">{{ tech.name }}</td>
               <td class="px-6 py-4">{{ tech.description }}</td>
               <td class="px-6 py-4">${{ tech.price }}</td>

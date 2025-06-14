@@ -1,8 +1,6 @@
 import { reactive } from 'vue'
 import { obtenerToken } from './auth'
 
-const API_URL = import.meta.env.VITE_API_URL
-
 const cartState = reactive({
   items: [],
   count: 0,
@@ -27,7 +25,7 @@ const fetchCartData = async () => {
       cartState.loading = false
       return
     }
-    const response = await fetch(`${API_URL}/api/carrito`, {
+    const response = await fetch('http://localhost:5000/api/carrito', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -50,9 +48,9 @@ const updateCartItem = async (servicioId, cantidad) => {
   try {
     const token = obtenerToken()
     if (!token) return
-
+    
     const response = await fetch(
-      `${API_URL}/api/carrito/${servicioId}`,
+      `http://localhost:5000/api/carrito/${servicioId}`,
       {
         method: 'PUT',
         headers: {
@@ -73,8 +71,8 @@ const removeCartItem = async (servicioId) => {
   try {
     const token = obtenerToken()
     if (!token) return
-
-    const response = await fetch(`${API_URL}/api/carrito/${servicioId}`, {
+    
+    const response = await fetch(`http://localhost:5000/api/carrito/${servicioId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -87,4 +85,4 @@ const removeCartItem = async (servicioId) => {
   }
 }
 
-export { cartState, fetchCartData, updateCartItem, removeCartItem }
+export { cartState, fetchCartData, updateCartItem, removeCartItem } 

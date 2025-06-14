@@ -3,18 +3,23 @@ import { ref } from 'vue'
 import facebookIcon from '@/assets/icon/facebook.png'
 import twitterIcon from '@/assets/icon/twitter.png'
 import instagramIcon from '@/assets/icon/instagram.png'
+import linkedinIcon from '@/assets/icon/linkeding.png' // Asegúrate que el archivo exista
 
+// Redes sociales
 const redesSociales = [
   { nombre: 'Facebook', icono: facebookIcon, url: 'https://facebook.com' },
   { nombre: 'Twitter', icono: twitterIcon, url: 'https://twitter.com' },
-  { nombre: 'Instagram', icono: instagramIcon, url: 'https://instagram.com' }
+  { nombre: 'Instagram', icono: instagramIcon, url: 'https://instagram.com' },
+  { nombre: 'LinkedIn', icono: linkedinIcon, url: 'https://linkedin.com' }
 ]
 
+// Newsletter
 const emailNewsletter = ref('')
 const estaSuscrito = ref(false)
 const textoBoton = ref('Suscribete')
 const errorEmail = ref('')
 
+// Validación de email con regex
 const esEmailValido = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
 const manejarSuscripcion = () => {
@@ -32,7 +37,7 @@ const manejarSuscripcion = () => {
 
   estaSuscrito.value = true
   textoBoton.value = '¡Gracias por suscribirte!'
-  alert(`¡Gracias por suscribirte, ${emailNewsletter.value}!`)
+  alert(`¡Gracias por suscribirte, ${emailNewsletter.value}}!`)
   emailNewsletter.value = ''
 
   setTimeout(() => {
@@ -41,7 +46,6 @@ const manejarSuscripcion = () => {
   }, 5000)
 }
 </script>
-
 
 <template>
   <footer class="bg-gradient-to-r from-zinc-800 to-zinc-900 text-white py-16">

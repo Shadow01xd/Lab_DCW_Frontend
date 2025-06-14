@@ -6,10 +6,10 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  base: './', 
+  base: './', // 👈 ¡ESTO ES LO IMPORTANTE!
   plugins: [
     vue(),
-    // vueDevTools(), 
+    // vueDevTools(), // Puedes activar si quieres
     tailwindcss(),
   ],
   resolve: {

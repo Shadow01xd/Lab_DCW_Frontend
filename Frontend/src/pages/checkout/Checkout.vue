@@ -5,8 +5,9 @@ import Header from '../../components/layout/Header.vue'
 import Footer from '../../components/layout/Footer.vue'
 import { cartState, fetchCartData } from '../../utils/cartStore'
 
-const API_URL = import.meta.env.VITE_API_URL
 const router = useRouter()
+const error = ref('')
+const cargando = ref(false)
 
 const formData = ref({
   nombre: '',
@@ -20,24 +21,30 @@ const formData = ref({
 })
 
 onMounted(() => {
+  if (!cartState.items.length) {
+    router.push('/cart')
+    return
+  }
   fetchCartData()
 })
 
-// Formatea número tarjeta
+// Formatea el número de tarjeta en bloques de 4
 watch(() => formData.value.numeroTarjeta, (val) => {
   const digits = val.replace(/\D/g, '').slice(0, 16)
   formData.value.numeroTarjeta = digits.replace(/(.{4})/g, '$1 ').trim()
 })
 
-// Formatea fecha expiración MM/AA
+// Formatea la fecha de expiración como MM/AA
 watch(() => formData.value.fechaExpiracion, (val) => {
   const digits = val.replace(/\D/g, '').slice(0, 4)
-  formData.value.fechaExpiracion = digits.length >= 3
-    ? `${digits.slice(0, 2)}/${digits.slice(2)}`
-    : digits
+  if (digits.length >= 3) {
+    formData.value.fechaExpiracion = `${digits.slice(0, 2)}/${digits.slice(2)}`
+  } else {
+    formData.value.fechaExpiracion = digits
+  }
 })
 
-// CVV solo 3 dígitos
+// CVV: Solo permite 3 dígitos
 watch(() => formData.value.cvv, (val) => {
   formData.value.cvv = val.replace(/\D/g, '').slice(0, 3)
 })
@@ -51,20 +58,45 @@ const validarFechaExpiracion = () => {
   return expDate > now
 }
 
+const validarFormulario = () => {
+  if (!formData.value.nombre || !formData.value.apellido || !formData.value.direccion || 
+      !formData.value.ciudad || !formData.value.codigoPostal) {
+    error.value = 'Por favor, completa todos los campos de envío'
+    return false
+  }
+
+  if (!formData.value.numeroTarjeta || formData.value.numeroTarjeta.replace(/\s/g, '').length !== 16) {
+    error.value = 'Número de tarjeta inválido'
+    return false
+  }
+
+  if (!validarFechaExpiracion()) {
+    error.value = 'La fecha de expiración es inválida o ya venció'
+    return false
+  }
+
+  if (!formData.value.cvv || formData.value.cvv.length !== 3) {
+    error.value = 'CVV inválido'
+    return false
+  }
+
+  return true
+}
+
 const subtotal = computed(() => cartState.total)
 const impuestos = computed(() => +(subtotal.value * 0.13).toFixed(2))
 const total = computed(() => +(subtotal.value + impuestos.value).toFixed(2))
 
-const getImageUrl = (path) => `${API_URL}${path}`
+const getImageUrl = (path) => `https://laboratorio-dcw-production.up.railway.app${path}`
 
 const procesarCompra = async () => {
-  if (!validarFechaExpiracion()) {
-    alert('La fecha de expiración es inválida o ya venció.')
-    return
-  }
+  if (!validarFormulario()) return
+
+  cargando.value = true
+  error.value = ''
 
   try {
-    const response = await fetch(`${API_URL}/ordenes`, {
+    const response = await fetch('https://laboratorio-dcw-production.up.railway.app/api/ordenes', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -72,8 +104,9 @@ const procesarCompra = async () => {
       },
       body: JSON.stringify({
         items: cartState.items.map(item => ({
-          servicioId: item.servicioId._id,
-          cantidad: item.cantidad
+          producto_id: item.servicioId._id,
+          cantidad: item.cantidad,
+          tecnologias: item.tecnologiasSeleccionadas || []
         })),
         direccion: {
           nombre: formData.value.nombre,
@@ -81,18 +114,24 @@ const procesarCompra = async () => {
           direccion: formData.value.direccion,
           ciudad: formData.value.ciudad,
           codigoPostal: formData.value.codigoPostal
-        }
+        },
+        total: total.value
       })
     })
 
-    if (!response.ok) throw new Error('Error al procesar la compra')
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Error al procesar la compra')
+    }
 
     cartState.items = []
     localStorage.removeItem('cart')
     router.push('/confirmacion')
   } catch (err) {
     console.error(err)
-    alert('Hubo un error al procesar tu compra.')
+    error.value = err.message || 'Hubo un error al procesar tu compra'
+  } finally {
+    cargando.value = false
   }
 }
 </script>
@@ -104,6 +143,10 @@ const procesarCompra = async () => {
       <h1 class="text-3xl font-bold text-violet-700 mb-6 flex items-center gap-2">
         <span class="text-4xl">💳</span> Finalizar Compra
       </h1>
+
+      <div v-if="error" class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <span class="block sm:inline">{{ error }}</span>
+      </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Formulario -->
@@ -179,8 +222,9 @@ const procesarCompra = async () => {
 
             <!-- Botón -->
             <button type="submit"
-                    class="w-full bg-violet-600 text-white py-3 rounded-xl shadow-md hover:bg-violet-700 hover:shadow-lg transition-all duration-300 text-lg font-semibold tracking-wide">
-              Confirmar Compra
+                    :disabled="cargando"
+                    class="w-full bg-violet-600 text-white py-3 rounded-xl shadow-md hover:bg-violet-700 hover:shadow-lg transition-all duration-300 text-lg font-semibold tracking-wide disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ cargando ? 'Procesando...' : 'Confirmar Compra' }}
             </button>
           </form>
         </div>
@@ -190,7 +234,8 @@ const procesarCompra = async () => {
           <h2 class="text-xl font-bold text-gray-800 mb-6">🧾 Resumen del Pedido</h2>
           <div class="space-y-4">
             <div v-for="item in cartState.items" :key="item.servicioId._id" class="flex items-center space-x-4">
-              <img :src="getImageUrl(item.servicioId.imagen)" class="w-20 h-20 object-cover rounded-xl border" />
+              <img :src="getImageUrl(item.servicioId.imagen)" :alt="item.servicioId.nombre"
+                   class="w-20 h-20 object-cover rounded-xl border" />
               <div class="flex-1">
                 <h3 class="text-sm font-semibold text-gray-900">{{ item.servicioId.nombre }}</h3>
                 <p class="text-sm text-gray-500">Cantidad: {{ item.cantidad }}</p>

@@ -1,89 +1,3 @@
-<script setup>
-import { ref, computed, watch } from 'vue'
-
-const props = defineProps({
-  show: { type: Boolean, default: false },
-  service: { type: Object, default: null }
-})
-
-const emit = defineEmits(['close', 'add-to-cart'])
-
-const API_URL = import.meta.env.VITE_API_URL
-const tecnologias = ref([])
-const tecnologiasSeleccionadas = ref([])
-const mostrarTecnologias = ref(false)
-
-// URL segura para imágenes
-const getImageUrl = (path) => {
-  return path?.startsWith('http') ? path : `${API_URL}${path}`
-}
-
-// Lista filtrada de tecnologías
-const tecnologiasFiltradas = computed(() => {
-  if (!props.service) return []
-  return tecnologias.value.filter(t => t.categoria === props.service.categoria)
-})
-
-// Verifica si una tecnología está seleccionada
-const isSelected = (techId) => tecnologiasSeleccionadas.value.includes(techId)
-
-// Alterna selección
-const toggleTechnology = (techId) => {
-  const i = tecnologiasSeleccionadas.value.indexOf(techId)
-  if (i >= 0) {
-    tecnologiasSeleccionadas.value.splice(i, 1)
-  } else {
-    tecnologiasSeleccionadas.value.push(techId)
-  }
-}
-
-// Suma de precios de tecnologías
-const precioTecnologias = computed(() =>
-  tecnologiasSeleccionadas.value.reduce((total, id) => {
-    const tech = tecnologias.value.find(t => t._id === id)
-    return total + (tech?.price || 0)
-  }, 0)
-)
-
-// Precio total
-const precioTotal = computed(() => {
-  return props.service ? props.service.costo + precioTecnologias.value : 0
-})
-
-// Carga tecnologías desde la API
-const fetchTechnologies = async () => {
-  try {
-    const token = localStorage.getItem('token')
-    const res = await fetch(`${API_URL}/tecnologias`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    if (!res.ok) throw new Error('Error al obtener tecnologías')
-    tecnologias.value = await res.json()
-  } catch (err) {
-    console.error('fetchTechnologies →', err)
-  }
-}
-
-// Emitir evento para agregar al carrito
-const agregarAlCarrito = () => {
-  emit('add-to-cart', {
-    ...props.service,
-    tecnologiasSeleccionadas: tecnologiasSeleccionadas.value,
-    precioTotal: precioTotal.value
-  })
-}
-
-// Al mostrar modal, limpiar selección y cargar tecnologías
-watch(() => props.show, (val) => {
-  if (val) {
-    tecnologiasSeleccionadas.value = []
-    mostrarTecnologias.value = false
-    fetchTechnologies()
-  }
-})
-</script>
-
-
 <template>
   <div v-if="show" class="fixed inset-0 bg-gradient-to-br from-purple-900/70 to-fuchsia-900/70 flex justify-center items-center z-50 p-4">
     <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full p-8 relative animate-fade-in-up flex flex-col md:flex-row gap-8">
@@ -98,7 +12,7 @@ watch(() => props.show, (val) => {
       <div class="flex-1 flex items-center justify-center">
         <img
           v-if="service.imagen"
-          :src="'http://localhost:5000' + service.imagen"
+          :src="'https://laboratorio-dcw-production.up.railway.app' + service.imagen"
           :alt="service.nombre"
           class="max-h-full max-w-full object-contain rounded-lg shadow-lg border border-gray-100" />
       </div>
@@ -142,7 +56,7 @@ watch(() => props.show, (val) => {
                 <div class="flex items-center gap-3">
                   <img
                     v-if="tech.image"
-                    :src="`http://localhost:5000${tech.image}`"
+                    :src="`https://laboratorio-dcw-production.up.railway.app${tech.image}`"
                     :alt="tech.name"
                     class="h-8 w-8 object-cover rounded-full"
                   />
@@ -178,6 +92,96 @@ watch(() => props.show, (val) => {
   </div>
 </template>
 
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+
+const props = defineProps({
+  show: { type: Boolean, default: false },
+  service: { type: Object, default: null },
+})
+
+const emit = defineEmits(['close', 'add-to-cart'])
+
+const tecnologias = ref([])
+const tecnologiasSeleccionadas = ref([])
+const mostrarTecnologias = ref(false)
+
+// Filtrar tecnologías según la categoría del servicio
+const tecnologiasFiltradas = computed(() => {
+  if (!props.service) return []
+  const filtered = tecnologias.value.filter(tech => tech.categoria === props.service.categoria)
+  return filtered
+})
+
+// Verificar si una tecnología está seleccionada
+const isSelected = (techId) => {
+  return tecnologiasSeleccionadas.value.includes(techId)
+}
+
+// Toggle la selección de una tecnología
+const toggleTechnology = (techId) => {
+  const index = tecnologiasSeleccionadas.value.indexOf(techId)
+  if (index > -1) {
+    tecnologiasSeleccionadas.value.splice(index, 1) // Eliminar
+  } else {
+    tecnologiasSeleccionadas.value.push(techId) // Añadir
+  }
+}
+
+// Calcular el precio de las tecnologías seleccionadas
+const precioTecnologias = computed(() => {
+  return tecnologiasSeleccionadas.value.reduce((total, techId) => {
+    const tech = tecnologias.value.find(t => t._id === techId)
+    return total + (tech ? tech.price : 0)
+  }, 0)
+})
+
+// Calcular el precio total
+const precioTotal = computed(() => {
+  return props.service.costo + precioTecnologias.value
+})
+
+// Cargar tecnologías al montar el componente
+const fetchTechnologies = async () => {
+  try {
+    const token = localStorage.getItem('token')
+    const response = await fetch('https://laboratorio-dcw-production.up.railway.app/api/tecnologias', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Error al obtener tecnologías')
+    }
+
+    const data = await response.json()
+    tecnologias.value = data
+  } catch (error) {
+    console.error('Error:', error)
+  }
+}
+
+// Agregar al carrito con las tecnologías seleccionadas
+const agregarAlCarrito = () => {
+  emit('add-to-cart', {
+    ...props.service,
+    tecnologiasSeleccionadas: tecnologiasSeleccionadas.value,
+    precioTotal: precioTotal.value
+  })
+}
+
+watch(() => props.show, (newValue) => {
+  if (newValue) {
+    fetchTechnologies()
+    tecnologiasSeleccionadas.value = []
+    mostrarTecnologias.value = false 
+  } else {
+    tecnologiasSeleccionadas.value = []
+    mostrarTecnologias.value = false
+  }
+})
+</script>
 
 <style scoped>
 .animate-fade-in-up {
