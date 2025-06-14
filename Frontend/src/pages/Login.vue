@@ -54,11 +54,11 @@ const realizarLogin = async () => {
       <form @submit.prevent="realizarLogin" class="space-y-4">
         <div>
           <input v-model="email" type="email" placeholder="Correo electrónico" required
-                 class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
+               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
         </div>
         <div>
           <input v-model="password" type="password" placeholder="Contraseña" required
-                 class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
+               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
         </div>
 
         <p v-if="error" class="text-red-600 text-sm text-center">{{ error }}</p>

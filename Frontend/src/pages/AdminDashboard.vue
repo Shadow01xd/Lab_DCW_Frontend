@@ -174,7 +174,7 @@ const actualizarEstadoOrden = async (orderId, nuevoEstado) => {
     })
 
     if (!response.ok) throw new Error('Error al actualizar el estado')
-    
+
     // Actualizar la orden localmente
     const orderIndex = orders.value.findIndex(o => o._id === orderId)
     if (orderIndex !== -1) {
@@ -191,7 +191,7 @@ onMounted(async () => {
   if (!usuario.value || usuario.value.rol !== 'admin') {
     router.push('/login')
     return
-  }
+}
   await cargarDatos()
 })
 </script>
@@ -452,7 +452,7 @@ onMounted(async () => {
             {{ modalType === 'order' ? 'Detalles de la Orden' : 
                modalType === 'user' ? 'Detalles del Usuario' : 
                'Detalles del Servicio' }}
-          </h3>
+            </h3>
           <button 
             @click="cerrarModal"
             class="text-gray-400 hover:text-gray-500"
@@ -487,7 +487,7 @@ onMounted(async () => {
               <p class="text-sm font-medium text-gray-500">Total</p>
               <p class="mt-1 text-lg font-semibold">{{ formatearPrecio(selectedItem.total) }}</p>
             </div>
-          </div>
+            </div>
 
           <div>
             <h4 class="text-lg font-medium text-gray-900 mb-4">Items</h4>
