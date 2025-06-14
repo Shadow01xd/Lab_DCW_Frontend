@@ -15,9 +15,12 @@ const route = useRoute()
 const router = useRouter()
 
 onMounted(() => {
-  if (route.query.email) {
-    email.value = route.query.email
+  const emailParam = route.query.email
+  if (!emailParam) {
+    error.value = 'No se proporcionó el correo electrónico.'
+    return
   }
+  email.value = emailParam
 })
 
 const verificarCodigoYRestablecer = async () => {
@@ -51,8 +54,9 @@ const verificarCodigoYRestablecer = async () => {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Error al verificar el código')
+      const respText = await response.text()
+      console.error('❌ Respuesta inesperada:', respText)
+      throw new Error(`Error ${response.status}: ${respText}`)
     }
 
     const data = await response.json()
@@ -62,14 +66,15 @@ const verificarCodigoYRestablecer = async () => {
       router.push('/login')
     }, 3000)
 
-  } catch (error) {
-    console.error('Error al restablecer contraseña:', error)
-    error.value = error.message || 'Error al restablecer la contraseña. Inténtalo de nuevo.'
+  } catch (err) {
+    console.error('❌ Error al restablecer contraseña:', err)
+    error.value = err.message || 'Ocurrió un error inesperado.'
   } finally {
     cargando.value = false
   }
 }
 </script>
+
 
 
 <template>

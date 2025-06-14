@@ -8,7 +8,7 @@ import { register } from '@/utils/api'
 
 const API_URL = import.meta.env.VITE_API_URL
 
-/* --------- estado --------- */
+// Estado
 const seccion = ref('usuarios')
 const refetchUsuarios = ref(0)
 const refetchServicios = ref(0)
@@ -18,68 +18,78 @@ const mostrarCrear = ref(false)
 const usuarioActual = ref({ nombre: '' })
 const nuevoUsuario = ref({ nombre: '', email: '', password: '', rol: 'cliente' })
 
-/* --------- saludo --------- */
+// Nombre visible
 const displayName = computed(() =>
   usuarioActual.value?.nombre ??
   usuarioActual.value?.nombreUsuario ??
-  usuarioActual.value?.username ?? 'Usuario'
+  usuarioActual.value?.username ??
+  'Usuario'
 )
 
-/* --------- carga del admin --------- */
+// Al montar: obtener datos del admin actual
 onMounted(async () => {
   try {
     const token = obtenerToken()
+    if (!token) throw new Error('Token no disponible')
+
     const response = await fetch(`${API_URL}/auth/me`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     })
 
-    if (!response.ok) {
-      throw new Error('Error al obtener datos del usuario')
-    }
-
+    if (!response.ok) throw new Error('Error al obtener datos del usuario')
     const data = await response.json()
     usuarioActual.value = data.user
-  } catch {
+  } catch (err) {
+    console.warn('[⚠️] No se pudo obtener datos del admin:', err)
     usuarioActual.value.nombre = 'Usuario'
   }
 })
 
+// Logout
 function logout() {
   cerrarSesion()
   window.location.href = '/'
 }
 
+// Cambio de pestaña
 function switchTab(tab) {
   seccion.value = tab
   mostrarCrear.value = false
 }
 
+// Reiniciar formulario
 function resetForm() {
-  nuevoUsuario.value = { nombre: '', email: '', password: '', rol: 'cliente' }
+  nuevoUsuario.value = {
+    nombre: '',
+    email: '',
+    password: '',
+    rol: 'cliente'
+  }
 }
 
-/* --------- registrar usuario (con token de admin) --------- */
+// Crear usuario
 async function crearUsuarioEnBackend() {
   const { nombre, email, password, rol } = nuevoUsuario.value
-  if (!nombre || !email || !password) {
-    alert('Completa todos los campos')
+
+  if (!nombre.trim() || !email.trim() || !password.trim()) {
+    alert('Por favor, completa todos los campos.')
     return
   }
 
   try {
     const token = obtenerToken()
+    if (!token) throw new Error('Sesión no válida.')
 
     const res = await register(nombre.trim(), email.trim(), password, rol, token)
-    if (res.error || res.message) throw new Error(res.message || 'Error')
+
+    if (res.error || res.message) throw new Error(res.message || 'Error al registrar usuario')
 
     refetchUsuarios.value++
     mostrarCrear.value = false
     resetForm()
   } catch (err) {
-    console.error('Registrar usuario →', err)
-    alert(err.message || 'Error al registrar usuario')
+    console.error('[❌] Registro usuario:', err)
+    alert(err.message || 'No se pudo registrar el usuario')
   }
 }
 </script>

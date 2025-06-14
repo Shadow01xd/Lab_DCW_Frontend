@@ -32,20 +32,21 @@ onMounted(() => {
 })
 </script>
 
-
-
 <template>
   <div class="services-container">
     <h2>Nuestros Servicios</h2>
+
     <div v-if="loading" class="loading">
       Cargando servicios...
     </div>
+
     <div v-else-if="error" class="error">
       {{ error }}
     </div>
+
     <div v-else class="services-grid">
       <div v-for="service in services" :key="service._id" class="service-card">
-        <img :src="service.imagen" :alt="service.nombre" class="service-image">
+        <img :src="getImageUrl(service.imagen)" :alt="service.nombre" class="service-image" />
         <div class="service-info">
           <h3>{{ service.nombre }}</h3>
           <p>{{ service.descripcion }}</p>
@@ -56,7 +57,6 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .services-container {
@@ -78,7 +78,7 @@ onMounted(() => {
   overflow: hidden;
   transition: transform 0.3s ease;
   background: white;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .service-card:hover {
@@ -131,4 +131,4 @@ onMounted(() => {
   padding: 2rem;
   color: #dc3545;
 }
-</style> 
+</style>

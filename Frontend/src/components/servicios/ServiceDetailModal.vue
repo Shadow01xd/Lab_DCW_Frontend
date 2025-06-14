@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed, watch } from 'vue'
 
@@ -14,48 +13,49 @@ const tecnologias = ref([])
 const tecnologiasSeleccionadas = ref([])
 const mostrarTecnologias = ref(false)
 
-// Lista de tecnologías por categoría
+// URL segura para imágenes
+const getImageUrl = (path) => {
+  return path?.startsWith('http') ? path : `${API_URL}${path}`
+}
+
+// Lista filtrada de tecnologías
 const tecnologiasFiltradas = computed(() => {
   if (!props.service) return []
   return tecnologias.value.filter(t => t.categoria === props.service.categoria)
 })
 
-// Verificar si una tecnología está seleccionada
-const isSelected = (techId) => {
-  return tecnologiasSeleccionadas.value.includes(techId)
-}
+// Verifica si una tecnología está seleccionada
+const isSelected = (techId) => tecnologiasSeleccionadas.value.includes(techId)
 
-// Alternar selección de tecnología
+// Alterna selección
 const toggleTechnology = (techId) => {
-  const index = tecnologiasSeleccionadas.value.indexOf(techId)
-  if (index >= 0) {
-    tecnologiasSeleccionadas.value.splice(index, 1)
+  const i = tecnologiasSeleccionadas.value.indexOf(techId)
+  if (i >= 0) {
+    tecnologiasSeleccionadas.value.splice(i, 1)
   } else {
     tecnologiasSeleccionadas.value.push(techId)
   }
 }
 
-// Sumar precios de tecnologías seleccionadas
-const precioTecnologias = computed(() => {
-  return tecnologiasSeleccionadas.value.reduce((total, id) => {
+// Suma de precios de tecnologías
+const precioTecnologias = computed(() =>
+  tecnologiasSeleccionadas.value.reduce((total, id) => {
     const tech = tecnologias.value.find(t => t._id === id)
     return total + (tech?.price || 0)
   }, 0)
-})
+)
 
-// Precio total final
+// Precio total
 const precioTotal = computed(() => {
   return props.service ? props.service.costo + precioTecnologias.value : 0
 })
 
-// Obtener tecnologías desde la API
+// Carga tecnologías desde la API
 const fetchTechnologies = async () => {
   try {
     const token = localStorage.getItem('token')
     const res = await fetch(`${API_URL}/tecnologias`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     })
     if (!res.ok) throw new Error('Error al obtener tecnologías')
     tecnologias.value = await res.json()
@@ -64,7 +64,7 @@ const fetchTechnologies = async () => {
   }
 }
 
-// Enviar datos al carrito
+// Emitir evento para agregar al carrito
 const agregarAlCarrito = () => {
   emit('add-to-cart', {
     ...props.service,
@@ -73,7 +73,7 @@ const agregarAlCarrito = () => {
   })
 }
 
-// Efecto: cuando el modal se abre, limpiar y cargar tecnologías
+// Al mostrar modal, limpiar selección y cargar tecnologías
 watch(() => props.show, (val) => {
   if (val) {
     tecnologiasSeleccionadas.value = []

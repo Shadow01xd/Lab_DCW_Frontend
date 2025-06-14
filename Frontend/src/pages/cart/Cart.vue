@@ -57,7 +57,6 @@ const impuestos = computed(() => +(subtotal.value * 0.13).toFixed(2))
 const totalFinal = computed(() => +(subtotal.value + impuestos.value).toFixed(2))
 </script>
 
-
 <template>
   <Header />
   <section class="min-h-screen pt-24 p-8 bg-gray-50">
@@ -94,7 +93,8 @@ const totalFinal = computed(() => +(subtotal.value + impuestos.value).toFixed(2)
               @mouseover="showTechnologiesHover(item.servicioId._id)" @mouseleave="hideTechnologiesHover()">
               <div class="flex flex-col md:flex-row gap-6">
                 <div class="flex-shrink-0">
-                  <img v-if="item.servicioId.imagen" :src="'http://localhost:5000' + item.servicioId.imagen"
+                  <!-- ✅ CORREGIDO -->
+                  <img v-if="item.servicioId.imagen" :src="`${API_URL}${item.servicioId.imagen}`"
                     :alt="item.servicioId.nombre" class="w-32 h-32 object-cover rounded-lg border border-gray-200" />
                 </div>
                 <div class="flex-grow">

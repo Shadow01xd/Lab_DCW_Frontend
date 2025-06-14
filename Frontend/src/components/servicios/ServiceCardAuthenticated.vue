@@ -25,13 +25,9 @@ const props = defineProps({
 
 const emit = defineEmits(['view-details'])
 
-// ✅ URL dinámica para producción
 const API_URL = import.meta.env.VITE_API_URL
 
-function getImageUrl(imagenPath) {
-  if (!imagenPath) return ''
-  return imagenPath.startsWith('http')
-    ? imagenPath
-    : `${API_URL}${imagenPath}`
+const getImageUrl = (path) => {
+  return path?.startsWith('http') ? path : `${API_URL}${path}`
 }
 </script>

@@ -15,6 +15,12 @@ const solicitarRestablecimiento = async () => {
   mensaje.value = ''
   error.value = ''
 
+  if (!email.value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+    error.value = 'Por favor, introduce un correo válido.'
+    cargando.value = false
+    return
+  }
+
   try {
     const response = await fetch(`${API_URL}/auth/forgotpassword`, {
       method: 'POST',
@@ -27,23 +33,23 @@ const solicitarRestablecimiento = async () => {
     const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.message || 'Error al enviar el correo de restablecimiento')
+      throw new Error(data.message || 'Error al enviar el correo de restablecimiento.')
     }
 
-    mensaje.value = data.message || 'Instrucciones enviadas si el correo está registrado.'
+    mensaje.value = data.message || 'Instrucciones enviadas correctamente.'
 
     setTimeout(() => {
       router.push({ name: 'VerifyResetCode', query: { email: email.value } })
     }, 2000)
-
   } catch (err) {
-    console.error('[❌] Error restablecimiento:', err)
-    error.value = err.message || 'Error al solicitar restablecimiento de contraseña.'
+    console.error('[❌] Error al solicitar restablecimiento:', err)
+    error.value = err.message || 'Error al conectar con el servidor.'
   } finally {
     cargando.value = false
   }
 }
 </script>
+
 
 <template>
   <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-rose-100">

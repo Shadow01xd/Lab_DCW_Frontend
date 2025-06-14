@@ -1,14 +1,16 @@
 <script setup>
-import { ref, onMounted, watch, defineProps, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { obtenerToken } from '@/utils/auth'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://laboratoriodcw-production.up.railway.app'
 
-const props = defineProps({ refetch: { type: Number, default: 0 } })
+const props = defineProps({
+  refetch: { type: Number, default: 0 }
+})
 
-const usuarios    = ref([])
-const cargando    = ref(true)
-const error       = ref('')
+const usuarios = ref([])
+const cargando = ref(true)
+const error = ref('')
 const modoEdicion = ref(null)
 
 // Paginación
@@ -20,7 +22,6 @@ const usuariosPaginados = computed(() => {
 })
 const totalPaginas = computed(() => Math.ceil(usuarios.value.length / porPagina))
 
-// Obtener usuarios
 const fetchUsers = async () => {
   cargando.value = true
   error.value = ''
@@ -36,11 +37,9 @@ const fetchUsers = async () => {
     const data = await response.json()
     usuarios.value = data
 
-    // Reajustar la página si es necesario
     if (paginaActual.value > totalPaginas.value) {
       paginaActual.value = totalPaginas.value || 1
     }
-
   } catch (err) {
     console.error(err)
     error.value = err.message || 'Error desconocido al cargar usuarios'

@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer.vue'
 
 const API_URL = import.meta.env.VITE_API_URL
 const router = useRouter()
+
 const usuario = ref({
   nombre: '',
   email: '',
@@ -21,63 +22,73 @@ const cargando = ref(false)
 onMounted(() => {
   const usuarioActual = obtenerUsuario()
   if (usuarioActual) {
-    usuario.value = { 
-      ...usuarioActual,
-      password: '',
-      confirmPassword: ''
-    }
+    usuario.value.nombre = usuarioActual.nombre || ''
+    usuario.value.email = usuarioActual.email || ''
   }
 })
 
 const guardarCambios = async () => {
+  cargando.value = true
+  mensaje.value = ''
+  error.value = ''
+
+  if (usuario.value.password && usuario.value.password !== usuario.value.confirmPassword) {
+    error.value = 'Las contraseñas no coinciden.'
+    cargando.value = false
+    return
+  }
+
   try {
-    cargando.value = true
-    error.value = ''
-    mensaje.value = ''
-
-    if (usuario.value.password && usuario.value.password !== usuario.value.confirmPassword) {
-      error.value = 'Las contraseñas no coinciden'
-      cargando.value = false
-      return
-    }
-
     const token = localStorage.getItem('token')
-    if (!token) {
-      throw new Error('No hay sesión activa')
+    if (!token) throw new Error('No hay sesión activa.')
+
+    const payload = {
+      nombre: usuario.value.nombre,
+      email: usuario.value.email
     }
 
-    const response = await fetch(`${API_URL}/usuarios/update-profile`, {
+    if (usuario.value.password) {
+      if (usuario.value.password.length < 6) {
+        error.value = 'La contraseña debe tener al menos 6 caracteres.'
+        cargando.value = false
+        return
+      }
+      payload.password = usuario.value.password
+    }
+
+    const res = await fetch(`${API_URL}/usuarios/update-profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({
-        nombre: usuario.value.nombre,
-        email: usuario.value.email,
-        password: usuario.value.password || undefined
-      })
+      body: JSON.stringify(payload)
     })
 
-    if (!response.ok) {
-      const data = await response.json()
-      throw new Error(data.message || 'Error al actualizar el perfil')
+    const data = await res.json()
+
+    if (!res.ok) throw new Error(data.message || 'Error al actualizar perfil.')
+
+    // Limpiar campos de contraseña
+    usuario.value.password = ''
+    usuario.value.confirmPassword = ''
+
+    // Guardar en localStorage solo nombre e email
+    const usuarioActualizado = {
+      nombre: data.nombre,
+      email: data.email,
+      rol: data.rol || 'cliente'
     }
-
-    const data = await response.json()
-
-    const usuarioActualizado = { ...data }
-    delete usuarioActualizado.password
-    delete usuarioActualizado.confirmPassword
     localStorage.setItem('usuario', JSON.stringify(usuarioActualizado))
 
-    mensaje.value = 'Perfil actualizado correctamente'
+    mensaje.value = 'Perfil actualizado correctamente.'
     setTimeout(() => {
       router.push('/')
     }, 2000)
+
   } catch (err) {
-    console.error('Error:', err)
-    error.value = err.message || 'Error al actualizar el perfil'
+    console.error('[❌] Error al actualizar perfil:', err)
+    error.value = err.message || 'Error inesperado.'
   } finally {
     cargando.value = false
   }

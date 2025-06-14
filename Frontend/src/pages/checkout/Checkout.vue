@@ -23,23 +23,21 @@ onMounted(() => {
   fetchCartData()
 })
 
-// Formatea el número de tarjeta en bloques de 4
+// Formatea número tarjeta
 watch(() => formData.value.numeroTarjeta, (val) => {
   const digits = val.replace(/\D/g, '').slice(0, 16)
   formData.value.numeroTarjeta = digits.replace(/(.{4})/g, '$1 ').trim()
 })
 
-// Formatea la fecha de expiración como MM/AA
+// Formatea fecha expiración MM/AA
 watch(() => formData.value.fechaExpiracion, (val) => {
   const digits = val.replace(/\D/g, '').slice(0, 4)
-  if (digits.length >= 3) {
-    formData.value.fechaExpiracion = `${digits.slice(0, 2)}/${digits.slice(2)}`
-  } else {
-    formData.value.fechaExpiracion = digits
-  }
+  formData.value.fechaExpiracion = digits.length >= 3
+    ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+    : digits
 })
 
-// CVV: Solo permite 3 dígitos
+// CVV solo 3 dígitos
 watch(() => formData.value.cvv, (val) => {
   formData.value.cvv = val.replace(/\D/g, '').slice(0, 3)
 })
@@ -74,7 +72,7 @@ const procesarCompra = async () => {
       },
       body: JSON.stringify({
         items: cartState.items.map(item => ({
-          producto_id: item.servicioId._id,
+          servicioId: item.servicioId._id,
           cantidad: item.cantidad
         })),
         direccion: {

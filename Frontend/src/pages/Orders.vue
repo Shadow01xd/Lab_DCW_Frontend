@@ -89,7 +89,7 @@
 import { ref, onMounted } from 'vue'
 import Header from '../components/layout/Header.vue'
 import Footer from '../components/layout/Footer.vue'
-import { obtenerUsuario } from '@/utils/auth'
+import { obtenerUsuario, obtenerToken } from '@/utils/auth'
 
 const orders = ref([])
 const loading = ref(true)
@@ -98,21 +98,31 @@ const API_URL = import.meta.env.VITE_API_URL
 
 const fetchOrders = async () => {
   try {
+    const token = obtenerToken()
+    if (!token) {
+      error.value = 'Usuario no autenticado.'
+      loading.value = false
+      return
+    }
+
     const response = await fetch(`${API_URL}/ordenes`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       }
     })
+
     if (!response.ok) {
-      throw new Error('Error al obtener las órdenes')
+      const resText = await response.text()
+      throw new Error(`Error ${response.status}: ${resText}`)
     }
+
     const data = await response.json()
     orders.value = data
-    loading.value = false
   } catch (err) {
-    error.value = 'Error al cargar el historial de compras. Por favor, intente nuevamente.'
+    console.error('❌ Error al obtener órdenes:', err)
+    error.value = 'No se pudo cargar el historial de compras.'
+  } finally {
     loading.value = false
-    console.error('Error fetching orders:', err)
   }
 }
 
@@ -120,3 +130,4 @@ onMounted(() => {
   fetchOrders()
 })
 </script>
+
