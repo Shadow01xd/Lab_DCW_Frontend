@@ -8,34 +8,38 @@ const mensaje = ref('')
 const error = ref('')
 const cargando = ref(false)
 const token = ref('')
-const API_URL = import.meta.env.VITE_API_URL
 
+const API_URL = import.meta.env.VITE_API_URL
 const route = useRoute()
 const router = useRouter()
 
 onMounted(() => {
-  token.value = route.params.resettoken
+  token.value = route.params.resettoken || ''
   if (!token.value) {
-    error.value = 'Token de restablecimiento no encontrado.'
+    error.value = 'Token de restablecimiento no encontrado en la URL.'
   }
 })
 
 const resetearContrasena = async () => {
-  cargando.value = true
   mensaje.value = ''
   error.value = ''
 
+  if (!token.value) {
+    error.value = 'Token inválido. No se puede continuar.'
+    return
+  }
+
   if (password.value !== confirmPassword.value) {
     error.value = 'Las contraseñas no coinciden.'
-    cargando.value = false
     return
   }
 
   if (password.value.length < 6) {
     error.value = 'La contraseña debe tener al menos 6 caracteres.'
-    cargando.value = false
     return
   }
+
+  cargando.value = true
 
   try {
     const response = await fetch(`${API_URL}/auth/resetpassword/${token.value}`, {
@@ -43,32 +47,28 @@ const resetearContrasena = async () => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        newPassword: password.value
-      })
+      body: JSON.stringify({ newPassword: password.value })
     })
 
+    const data = await response.json()
+
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Error al restablecer la contraseña')
+      throw new Error(data.message || 'Error al restablecer la contraseña.')
     }
 
-    const data = await response.json()
     mensaje.value = data.message || 'Contraseña restablecida correctamente.'
 
     setTimeout(() => {
       router.push('/login')
     }, 3000)
-
-  } catch (error) {
-    console.error('Error al restablecer contraseña:', error)
-    error.value = error.message || 'Error al restablecer la contraseña. Inténtalo de nuevo.'
+  } catch (err) {
+    console.error('❌ Error al restablecer contraseña:', err)
+    error.value = err.message || 'Ocurrió un error inesperado.'
   } finally {
     cargando.value = false
   }
 }
 </script>
-
 
 <template>
   <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-rose-100">
@@ -77,18 +77,30 @@ const resetearContrasena = async () => {
       <p class="text-center text-gray-600 mb-6">Ingresa tu nueva contraseña.</p>
 
       <form @submit.prevent="resetearContrasena" class="space-y-4">
-        <input v-model="password" type="password" placeholder="Nueva Contraseña"
-               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-               required>
-        <input v-model="confirmPassword" type="password" placeholder="Confirmar Contraseña"
-               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-               required>
-        
+        <input
+          v-model="password"
+          type="password"
+          placeholder="Nueva Contraseña"
+          required
+          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+        />
+
+        <input
+          v-model="confirmPassword"
+          type="password"
+          placeholder="Confirmar Contraseña"
+          required
+          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+        />
+
         <p v-if="error" class="text-red-600 text-sm text-center">{{ error }}</p>
         <p v-if="mensaje" class="text-green-600 text-sm text-center">{{ mensaje }}</p>
 
-        <button type="submit" class="bg-violet-600 text-white p-3 rounded w-full"
-                :disabled="cargando">
+        <button
+          type="submit"
+          :disabled="cargando"
+          class="bg-violet-600 hover:bg-violet-700 text-white p-3 rounded w-full transition-colors duration-300"
+        >
           {{ cargando ? 'Restableciendo...' : 'Restablecer Contraseña' }}
         </button>
       </form>
@@ -100,4 +112,4 @@ const resetearContrasena = async () => {
       </p>
     </div>
   </section>
-</template> 
+</template>
