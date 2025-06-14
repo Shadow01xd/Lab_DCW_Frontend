@@ -164,16 +164,17 @@ onMounted(fetchServices)
 </script>
 
 <template>
-  <div class="space-y-6">
-    <p v-if="error" class="text-center text-red-500">{{ error }}</p>
+  <div class="space-y-8 bg-gray-50 p-6 rounded-xl shadow-md">
+
+    <p v-if="error" class="text-center text-red-600 font-medium">{{ error }}</p>
 
     <!-- Tabla -->
-    <div class="overflow-x-auto rounded-lg shadow-md">
+    <div class="overflow-x-auto rounded-lg shadow ring-1 ring-gray-300 bg-white">
       <table
         v-if="!cargando && validServicios.length"
-        class="w-full table-auto text-sm text-gray-800"
+        class="w-full min-w-[800px] text-sm text-gray-700"
       >
-        <thead class="bg-violet-200 text-xs uppercase text-violet-800">
+        <thead class="bg-violet-600 text-white text-xs uppercase sticky top-0 z-10">
           <tr>
             <th class="p-3 text-left">Imagen</th>
             <th class="p-3 text-left">Nombre</th>
@@ -193,82 +194,79 @@ onMounted(fetchServices)
             <!-- Edición -->
             <template v-if="modoEdicion === s._id">
               <td class="p-2"><input type="file" @change="e => (s.imagen = e.target.files[0])" /></td>
-              <td class="p-2"><input v-model="s.nombre"     class="w-full rounded border px-2 py-1" /></td>
-              <td class="p-2"><textarea v-model="s.descripcion" class="w-full rounded border px-2 py-1" /></td>
-              <td class="p-2"><input v-model="s.costo" type="number" class="w-full rounded border px-2 py-1" /></td>
+              <td class="p-2"><input v-model="s.nombre" class="w-full rounded border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-violet-400" /></td>
+              <td class="p-2"><textarea v-model="s.descripcion" class="w-full rounded border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-violet-400" /></td>
+              <td class="p-2"><input v-model="s.costo" type="number" class="w-full rounded border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-violet-400" /></td>
               <td class="p-2">
-                <select v-model="s.categoria" class="w-full rounded border px-2 py-1">
+                <select v-model="s.categoria" class="w-full rounded border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-violet-400">
                   <option value="" disabled>— Selecciona —</option>
                   <option v-for="c in categorias" :key="c.value" :value="c.value">{{ c.label }}</option>
                 </select>
               </td>
-              <td class="p-2 text-center">
-                <button @click="updateService(s)" class="mr-2 font-semibold text-green-600">Guardar</button>
-                <button @click="modoEdicion = null" class="font-semibold text-gray-600">Cancelar</button>
+              <td class="p-2 text-center space-x-2">
+                <button @click="updateService(s)" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Guardar</button>
+                <button @click="modoEdicion = null" class="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500">Cancelar</button>
               </td>
             </template>
 
             <!-- Vista normal -->
             <template v-else>
               <td class="p-2">
-                <img :src="getImg(s.imagen)" class="h-16 w-16 rounded object-cover" />
+                <img :src="getImg(s.imagen)" class="h-16 w-16 rounded object-cover shadow-sm" />
               </td>
-              <td class="p-2">{{ s.nombre }}</td>
+              <td class="p-2 font-medium">{{ s.nombre }}</td>
               <td class="p-2">{{ s.descripcion }}</td>
-              <td class="p-2">${{ s.costo }}</td>
-              <td class="p-2 capitalize">
-                {{ categorias.find(c => c.value === s.categoria)?.label || 'Sin categoría' }}
-              </td>
-              <td class="p-2 text-center">
-                <button @click="modoEdicion = s._id" class="mr-2 font-semibold text-blue-600">Editar</button>
-                <button @click="deleteService(s._id)" class="font-semibold text-red-600">Eliminar</button>
+              <td class="p-2 font-semibold text-green-700">${{ s.costo }}</td>
+              <td class="p-2 capitalize">{{ categorias.find(c => c.value === s.categoria)?.label || 'Sin categoría' }}</td>
+              <td class="p-2 text-center space-x-2">
+                <button @click="modoEdicion = s._id" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Editar</button>
+                <button @click="deleteService(s._id)" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Eliminar</button>
               </td>
             </template>
           </tr>
         </tbody>
       </table>
 
-      <div
-        v-else-if="!cargando && !validServicios.length"
-        class="py-12 text-center text-gray-500"
-      >No hay servicios registrados.</div>
+      <!-- Sin servicios -->
+      <div v-else-if="!cargando && !validServicios.length" class="py-12 text-center text-gray-500 text-lg">
+        No hay servicios registrados.
+      </div>
     </div>
 
     <!-- Paginación -->
-    <div v-if="totalPaginas > 1" class="flex justify-center gap-2">
-      <button
-        @click="paginaActual--"
-        :disabled="paginaActual === 1"
-        class="rounded bg-violet-600 px-3 py-1 text-white disabled:opacity-40"
-      >Anterior</button>
-      <span>{{ paginaActual }} / {{ totalPaginas }}</span>
-      <button
-        @click="paginaActual++"
-        :disabled="paginaActual === totalPaginas"
-        class="rounded bg-violet-600 px-3 py-1 text-white disabled:opacity-40"
-      >Siguiente</button>
+    <div v-if="totalPaginas > 1" class="flex justify-center items-center gap-3 mt-4">
+      <button @click="paginaActual--" :disabled="paginaActual === 1"
+              class="rounded px-4 py-1 bg-violet-600 text-white disabled:opacity-50 hover:bg-violet-700">
+        Anterior
+      </button>
+      <span class="font-medium text-violet-800">{{ paginaActual }} / {{ totalPaginas }}</span>
+      <button @click="paginaActual++" :disabled="paginaActual === totalPaginas"
+              class="rounded px-4 py-1 bg-violet-600 text-white disabled:opacity-50 hover:bg-violet-700">
+        Siguiente
+      </button>
     </div>
 
-    <!-- Botón crear -->
-    <div v-if="!mostrarFormulario" class="mt-6 flex justify-center">
-      <button
-        @click="mostrarFormulario = true"
-        class="rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white shadow hover:bg-violet-700"
-      >Crear Servicio</button>
+    <!-- Botón Crear -->
+    <div v-if="!mostrarFormulario" class="text-center">
+      <button @click="mostrarFormulario = true"
+              class="rounded-xl bg-violet-600 px-6 py-3 text-white font-semibold shadow hover:bg-violet-700">
+        Crear Servicio
+      </button>
     </div>
 
-    <!-- Formulario crear -->
-    <div v-else class="rounded-lg bg-white/90 p-6 shadow-xl">
-      <h3 class="mb-4 text-2xl font-semibold text-violet-700">Crear nuevo servicio</h3>
-      <div class="grid gap-4 md:grid-cols-2">
+    <!-- Formulario Crear -->
+    <div v-else class="rounded-xl bg-white p-6 shadow-xl border border-gray-200">
+      <h3 class="mb-4 text-xl font-bold text-violet-700">Crear nuevo servicio</h3>
+      <div class="grid gap-6 md:grid-cols-2">
         <div class="space-y-4">
           <input v-model="nuevoServicio.nombre" placeholder="Nombre"
-                 class="w-full rounded border p-2 focus:ring-violet-400" />
+                 class="w-full rounded border p-2 focus:outline-none focus:ring-2 focus:ring-violet-400" />
           <textarea v-model="nuevoServicio.descripcion" placeholder="Descripción"
-                    class="w-full rounded border p-2 focus:ring-violet-400" />
+                    class="w-full rounded border p-2 focus:outline-none focus:ring-2 focus:ring-violet-400" />
           <input v-model="nuevoServicio.costo" type="number" placeholder="Costo"
-                 class="w-full rounded border p-2 focus:ring-violet-400" />
-          <select v-model="nuevoServicio.categoria" class="w-full rounded border p-2 focus:ring-violet-400">
+                 class="w-full rounded border p-2 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+          <select v-model="nuevoServicio.categoria"
+                  class="w-full rounded border p-2 focus:outline-none focus:ring-2 focus:ring-violet-400">
             <option value="" disabled>— Selecciona —</option>
             <option v-for="c in categorias" :key="c.value" :value="c.value">{{ c.label }}</option>
           </select>
@@ -276,19 +274,22 @@ onMounted(fetchServices)
         <div class="space-y-4">
           <div class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center">
             <input id="img-input" type="file" @change="handleImagen" accept="image/*" class="hidden" />
-            <label for="img-input" class="cursor-pointer text-violet-600 hover:text-violet-800">
+            <label for="img-input" class="cursor-pointer text-violet-600 hover:text-violet-800 font-medium">
               {{ imagenPreview ? 'Cambiar imagen' : 'Seleccionar imagen' }}
             </label>
-            <img v-if="imagenPreview" :src="imagenPreview" class="mx-auto mt-2 max-h-48 rounded" />
+            <img v-if="imagenPreview" :src="imagenPreview" class="mx-auto mt-2 max-h-48 rounded shadow-md" />
           </div>
           <button @click="createService"
-                  class="w-full rounded bg-violet-600 py-2 font-semibold text-white hover:bg-violet-700"
-          >Crear</button>
+                  class="w-full rounded bg-violet-600 py-2 font-semibold text-white hover:bg-violet-700">
+            Crear
+          </button>
           <button @click="mostrarFormulario = false"
-                  class="w-full rounded bg-gray-300 py-2 font-semibold text-gray-800 hover:bg-gray-400"
-          >Cancelar</button>
+                  class="w-full rounded bg-gray-300 py-2 font-semibold text-gray-800 hover:bg-gray-400">
+            Cancelar
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
+
